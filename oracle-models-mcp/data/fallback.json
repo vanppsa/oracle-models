@@ -1,0 +1,23 @@
+{
+  "updated_at": "2026-04-20",
+  "tiers": {
+    "HEAVY": {
+      "claude":  { "name": "Claude Opus 4.7",       "score": 57, "price": 10.00 },
+      "gemini":  { "name": "Gemini 3.1 Pro",        "score": 55, "price": 4.50  },
+      "glm":     { "name": "GLM-5.1",               "score": 53, "price": 2.15  },
+      "grok":    { "name": "Grok 4.20",             "score": 51, "price": 3.00  }
+    },
+    "MEDIUM": {
+      "claude":  { "name": "Claude Sonnet 4.6",     "score": 50, "price": 6.00  },
+      "gemini":  { "name": "Gemini 3 Flash",        "score": 48, "price": 1.13  },
+      "glm":     { "name": "GLM-5",                 "score": 46, "price": 1.55  },
+      "grok":    { "name": "Grok 4 Fast",           "score": 44, "price": 0.80  }
+    },
+    "LIGHT": {
+      "claude":  { "name": "Claude Haiku 4.5",      "score": 43, "price": 1.50  },
+      "gemini":  { "name": "Gemini 3.1 Flash Lite", "score": 40, "price": 0.15  },
+      "glm":     { "name": "GLM-4.7",               "score": 38, "price": 0.20  },
+      "grok":    { "name": "Grok 4.1",              "score": 36, "price": 0.20  }
+    }
+  }
+}
