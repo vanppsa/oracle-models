@@ -28,7 +28,7 @@ export interface ModelsData {
 
 const CACHE_DIR = path.join(os.homedir(), '.oracle-models');
 const CACHE_FILE = path.join(CACHE_DIR, 'cache.json');
-const CACHE_EXPIRATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
+const CACHE_EXPIRATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 function getFallbackData(): ModelsData {
   try {
@@ -36,7 +36,6 @@ function getFallbackData(): ModelsData {
     const data = fs.readFileSync(fallbackPath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
-    // Ultimate fallback caso o arquivo não exista no bundle
     return {
       updated_at: "2026-04-20",
       tiers: {
@@ -77,21 +76,12 @@ async function fetchLiveData(): Promise<ModelsData | null> {
 
     const html = await response.body.text();
     
-    // O site é uma React SPA. O scraping direto com undici geralmente retorna a casca vazia.
-    // Tentamos encontrar algum JSON embutido com "__NEXT_DATA__" ou similar
-    // Em caso de falha no parse, retornamos null silenciosamente para ativar o fallback local.
-    
-    // Se no futuro houver uma API pública conhecida (ex: /api/models), podemos injetá-la aqui.
-    // Exemplo de regex que falhará propositalmente se os dados não estiverem disponíveis inline
     const nextDataMatch = html.match(/<script id="__NEXT_DATA__" type="application\/json">(.*?)<\/script>/);
     if (nextDataMatch) {
-      // JSON parse seria feito aqui, e a extração mapeando HEAVY, MEDIUM, LIGHT
-      // Como não sabemos a estrutura exata do JSON (SPA muda frequentemente),
-      // Vamos assumir falha e delegar ao fallback se a lógica de extração não estiver mapeada
       return null;
     }
 
-    return null; // Forçando fallback como esperado para SPAs
+    return null;
   } catch (err) {
     return null;
   }
@@ -101,7 +91,6 @@ export async function getModelSuggestions(tier: Tier, preferred_provider?: strin
   let dataSource: "cache" | "live" = "cache";
   let modelsData: ModelsData | null = null;
 
-  // 1. Verificar cache local
   if (fs.existsSync(CACHE_FILE)) {
     try {
       const cacheContent = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
@@ -111,16 +100,13 @@ export async function getModelSuggestions(tier: Tier, preferred_provider?: strin
         modelsData = cacheContent.data;
       }
     } catch (e) {
-      // Ignora erro de cache corrompido, tenta fetch depois
     }
   }
 
-  // 2. Se não tem cache ou expirou, tenta fetch
   if (!modelsData) {
     modelsData = await fetchLiveData();
     if (modelsData) {
       dataSource = "live";
-      // Salva no cache
       if (!fs.existsSync(CACHE_DIR)) {
         fs.mkdirSync(CACHE_DIR, { recursive: true });
       }
@@ -129,14 +115,12 @@ export async function getModelSuggestions(tier: Tier, preferred_provider?: strin
         data: modelsData
       }, null, 2));
     } else {
-      // Fallback
       modelsData = getFallbackData();
     }
   }
 
   const tierModels = modelsData.tiers[tier];
 
-  // Adicionando um mapeamento flexível de aliases
   const normalizedProvider = preferred_provider ? preferred_provider.toLowerCase() : undefined;
   let suggestedFirst: string | undefined = undefined;
   
@@ -146,7 +130,6 @@ export async function getModelSuggestions(tier: Tier, preferred_provider?: strin
     else if (normalizedProvider.includes("zai") || normalizedProvider.includes("glm")) suggestedFirst = "glm";
     else if (normalizedProvider.includes("xai") || normalizedProvider.includes("grok")) suggestedFirst = "grok";
     else if (normalizedProvider.includes("openai") || normalizedProvider.includes("gpt")) {
-      // A skill atualmente mapeia 4 providers. Se passar openai e não houver na tabela, ignoramos ou sugerimos o Claude.
     }
   }
 

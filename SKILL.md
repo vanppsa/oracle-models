@@ -1,60 +1,60 @@
 ---
 name: oracle-models
-description: Classifies development task complexity (LIGHT/MEDIUM/HEAVY) at the end of plan responses and suggests the most cost-efficient AI model per company (Claude, Gemini, GLM, Grok). Silent during code execution — activates only when producing multi-step action plans. Models ranked by artificialanalysis.ai Intelligence Index. Updatable by any AI without manual reconfiguration.
+description: Classifies development task complexity (LIGHT/MEDIUM/HEAVY) at the end of plan responses and suggests the most cost-effective and capable AI model per company (Claude, Gemini, GLM, Grok). Silent during code execution — activates only when producing multi-step action plans. Models ranked by artificialanalysis.ai Intelligence Index. Updatable by any AI without manual reconfiguration.
 ---
 
 # ORACLE MODELS
-> Instrução de comportamento para IAs assistentes de desenvolvimento.
-> Versão: 2.0 | Atualizado em: 20/04/2026
+> Behavior instruction set for AI development assistants.
+> Version: 2.0 | Last updated: 05/02/2026
 
 ---
 
-## ⚠️ REGRA DE ATIVAÇÃO — LEIA ANTES DE TUDO
+## ⚠️ ACTIVATION RULE — READ BEFORE ALL
 
-**ESTA INSTRUÇÃO SÓ DEVE SER EXECUTADA NO MODO PLAN.**
+**THIS INSTRUCTION MUST ONLY BE EXECUTED IN PLAN MODE.**
 
-Ative o bloco de classificação SOMENTE quando a IA estiver produzindo:
-- Um plano de ação com múltiplos passos (ex.: "Passo 1... Passo 2... Passo 3...")
-- Uma análise de como implementar uma feature, correção ou refatoração
-- Uma resposta onde a IA descreve O QUE vai fazer ANTES de fazer
+Activate the classification block ONLY when the AI is producing:
+- A multi-step action plan (e.g., "Step 1... Step 2... Step 3...")
+- An analysis of how to implement a feature, fix, or refactor
+- A response where the AI describes WHAT it will do BEFORE doing it
 
-**NÃO ative em:**
-- Respostas diretas de uma linha (a não ser que o usuario chame a SKILL nominamente)
-- Durante execução de código (ACT mode)
-- Em edições pontuais sem planejamento prévio
-- Em perguntas conceituais ou explicativas sem tarefa associada
+**DO NOT activate on:**
+- Direct one-line responses (unless the user explicitly calls the SKILL)
+- During code execution (ACT mode)
+- During one-off edits without prior planning
+- Conceptual or explanatory questions without an associated task
 
-> Objetivo: evitar consumo desnecessário de tokens. O bloco é um sinal para
-> o usuário decidir se vai manter ou trocar o modelo antes de executar.
+> Objective: Minimize unnecessary token consumption. The block is a signal for
+> the user to decide whether to keep or switch the model before execution.
 
 ---
 
-## 🔍 FONTE DE REFERÊNCIA PARA MODELOS
+## 🔍 REFERENCE SOURCE FOR MODELS
 
-**Site oficial de benchmarks usado como base:**
+**Official benchmark site used as base:**
 **https://artificialanalysis.ai/leaderboards/models**
 
-- Metodologia independente (não auto-declarada pelos providers)
-- Cobre: Intelligence Index, preço blended, velocidade (tokens/s), latência
-- Atualização contínua com 100+ modelos rastreados
-- Para atualizar os modelos desta skill: acesse o site acima, filtre por
-  empresa (Anthropic, Google, Z AI, xAI) e substitua os modelos na tabela
-  abaixo, mantendo a estrutura de 3 tiers.
+- Independent methodology (not self-reported by providers)
+- Covers: Intelligence Index, blended price, speed (tokens/s), latency
+- Continuous updates with 100+ tracked models
+- To update the models in this skill: access the site above, filter by
+  company (Anthropic, Google, Z AI, xAI) and replace the models in the table
+  below, maintaining the 3-tier structure.
 
 ---
 
-## 🤖 TABELA DE MODELOS (Abril 2026)
+## 🤖 MODEL TABLE (May 2026)
 
-> Scores baseados no "Artificial Analysis Intelligence Index" de 20/04/2026.
-> 1 modelo por empresa por tier. Para trocar um modelo, edite apenas esta tabela.
+> Scores based on the "Artificial Analysis Intelligence Index" as of 05/02/2026.
+> 1 model per company per tier. To swap a model, edit only this table.
 
-| Tier          | Score AA | Claude (Anthropic) | Gemini (Google)        | GLM (Z.ai)  | Grok (xAI)       |
+| Tier          | AA Score | Claude (Anthropic) | Gemini (Google)        | GLM (Z.ai)  | Grok (xAI)       |
 |---------------|----------|--------------------|------------------------|-------------|------------------|
 | 🔴 HEAVY (H)  | 51–57    | Claude Opus 4.7    | Gemini 3.1 Pro         | GLM-5.1     | Grok 4.20        |
 | 🟡 MEDIUM (M) | 44–50    | Claude Sonnet 4.6  | Gemini 3 Flash         | GLM-5       | Grok 4 Fast      |
 | 🟢 LIGHT (L)  | ≤43      | Claude Haiku 4.5   | Gemini 3.1 Flash Lite  | GLM-4.7     | Grok 4.1         |
 
-### Referência de custo (blended USD/1M tokens — fonte: artificialanalysis.ai)
+### Cost Reference (blended USD/1M tokens — source: artificialanalysis.ai)
 
 | Tier | Claude         | Gemini               | GLM       | Grok    |
 |------|----------------|----------------------|-----------|---------|
@@ -64,150 +64,146 @@ Ative o bloco de classificação SOMENTE quando a IA estiver produzindo:
 
 ---
 
-## 📐 CRITÉRIOS TÉCNICOS DE CLASSIFICAÇÃO
+## 📐 TECHNICAL CLASSIFICATION CRITERIA
 
-A classificação é baseada em **complexidade computacional da tarefa**, não
-na percepção subjetiva de dificuldade. Use os critérios abaixo:
+Classification is based on **task computational complexity**, not
+subjective difficulty. Use the criteria below:
 
 ---
 
 ### 🟢 LIGHT — Tier L
 
-**Perfil:** Transformação determinística de baixa entropia. Sem ramificação lógica nova.
+**Profile:** Low-entropy deterministic transformation. No new logical branching.
 
-Classificar como LIGHT quando a tarefa atender ≥2 destes critérios:
-- Alteração de valor literal: string, número, booleano, label, mensagem de UI
-- Mudança de estilo sem alteração de lógica: CSS/Tailwind pontual, cor, espaçamento
-- Rename de variável, função ou arquivo sem impacto em interface pública
-- Adição ou remoção de campo em formulário já existente sem nova validação
-- Ajuste de rota existente: path, parâmetro, redirect — sem nova lógica de negócio
-- Tradução ou internacionalização de texto já estruturado
-- Copiar/adaptar bloco de código com alteração mínima (< 5 linhas de diferença)
-- Correção de typo em código funcional (variável errada, valor errado)
+Classify as LIGHT when the task meets ≥2 of these criteria:
+- Literal value change: string, number, boolean, label, UI message
+- Style change without logic impact: point CSS/Tailwind, color, spacing
+- Rename of variable, function, or file without impact on public interface
+- Addition/removal of field in existing form without new validation
+- Existing route adjustment: path, parameter, redirect — no new business logic
+- Internationalization/translation of pre-structured text
+- Copy/adapt code block with minimal change (< 5 lines difference)
+- Typo correction in functional code (wrong variable, wrong value)
 
-**Número esperado de arquivos modificados:** 1–2
-**Número esperado de novos tokens gerados:** < 200
+**Expected modified files:** 1–2
+**Expected new tokens generated:** < 200
 
 ---
 
 ### 🟡 MEDIUM — Tier M
 
-**Perfil:** Lógica nova dentro de escopo bem delimitado. Requer raciocínio sobre
-estado, efeitos colaterais ou interface entre componentes.
+**Profile:** New logic within a well-delimited scope. Requires reasoning about
+state, side effects, or component interface.
 
-Classificar como MEDIUM quando a tarefa atender ≥2 destes critérios:
-- Criação de componente, função ou módulo novo com estado interno
-- Refatoração de função existente com mudança de assinatura ou tipo de retorno
-- Adição de validação com múltiplas condições ou regras de negócio
-- Integração de endpoint novo em fluxo existente (sem auth nova)
-- Criação de hook/composable simples com 1–2 dependências
-- Implementação de feature flag, toggle de comportamento ou lógica condicional nova
-- Migração de dados com transformação (mapeamento de campos, conversão de tipo)
-- Adição de paginação, filtro ou ordenação em lista existente
-- Correção de bug com causa identificada que exige mudança em ≤3 arquivos
-- Configuração de pipeline, Docker, proxy ou ambiente de infraestrutura simples
+Classify as MEDIUM when the task meets ≥2 of these criteria:
+- Creation of new component, function, or module with internal state
+- Refactor of existing function with signature change or return type change
+- Addition of validation with multiple conditions or business rules
+- Integration of new endpoint in existing flow (no new auth)
+- Creation of simple hook/composable with 1–2 dependencies
+- Implementation of feature flag, behavior toggle, or new conditional logic
+- Data migration with transformation (field mapping, type conversion)
+- Addition of pagination, filter, or sort in existing list
+- Bug fix with identified cause requiring change in ≤3 files
+- Simple infra/pipeline/Docker/proxy configuration
 
-**Número esperado de arquivos modificados:** 2–5
-**Número esperado de novos tokens gerados:** 200–800
+**Expected modified files:** 2–5
+**Expected new tokens generated:** 200–800
 
 ---
 
 ### 🔴 HEAVY — Tier H
 
-**Perfil:** Alta entropia de decisão. Múltiplos consumidores afetados, lógica
-distribuída, ou risco sistêmico se implementado incorretamente.
+**Profile:** High decision entropy. Multiple consumers affected, distributed
+logic, or systemic risk if implemented incorrectly.
 
-Classificar como HEAVY quando a tarefa atender ≥1 destes critérios:
-- Extração de lógica compartilhada que afeta ≥3 consumidores (hooks, contexts, providers)
-- Redesign de arquitetura de módulo ou camada (ex.: migrar de REST para tRPC, mudar ORM)
-- Implementação de autenticação, autorização ou gerenciamento de sessão
-- Integração de sistema externo com OAuth, webhooks ou contratos de API não triviais
-- Debugging de bug não-determinístico (race condition, memory leak, comportamento intermitente)
-- Migração de schema de banco com dados em produção
-- Otimização de performance que requer profiling e múltiplas hipóteses
-- Criação de sistema de billing, pagamento ou qualquer fluxo financeiro
-- Implementação de pipeline de dados, ETL ou worker assíncrono com retry/fallback
-- Qualquer tarefa que cruze domínios de segurança, criptografia ou compliance
-- Refatoração que exige compreensão de todo o grafo de dependências do projeto
+Classify as HEAVY when the task meets ≥1 of these criteria:
+- Shared logic extraction affecting ≥3 consumers (hooks, contexts, providers)
+- Module or layer architecture redesign (e.g., migrating REST to tRPC, ORM switch)
+- Implementation of authentication, authorization, or session management
+- External system integration with OAuth, webhooks, or non-trivial API contracts
+- Debugging non-deterministic bugs (race conditions, memory leaks, intermittent behavior)
+- Database schema migration with production data
+- Performance optimization requiring profiling and multiple hypotheses
+- Creation of billing/payment system or any financial flow
+- Implementation of data pipeline, ETL, or async worker with retry/fallback
+- Any task crossing security, cryptography, or compliance domains
+- Refactoring requiring understanding of the entire project dependency graph
 
-**Número esperado de arquivos modificados:** 5+
-**Número esperado de novos tokens gerados:** 800+
-
----
-
-## 📤 FORMATO DO BLOCO DE SAÍDA
-
-Ao final de qualquer plano de ação que ative esta instrução, adicione
-**exatamente** este bloco:
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 CLASSIFICAÇÃO DA TAREFA
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Tier    : [LIGHT | MEDIUM | HEAVY]
-  Motivo  : [1 frase técnica referenciando o critério determinante]
-  Arquivos: ~[N] arquivos | ~[N] tokens gerados
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  🤖 MODELOS SUGERIDOS PARA EXECUÇÃO
-  Claude  : [modelo]
-  Gemini  : [modelo]
-  GLM     : [modelo]
-  Grok    : [modelo]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
+**Expected modified files:** 5+
+**Expected new tokens generated:** 800+
 
 ---
 
-## 🔄 PROTOCOLO DE ATUALIZAÇÃO DE MODELOS (para a IA)
+## 📤 OUTPUT BLOCK FORMAT
 
-Se o usuário pedir para trocar, adicionar ou remover modelos desta skill,
-execute autonomamente seguindo este protocolo:
+At the end of any action plan activating this instruction, add
+**exactly** this block:
 
-### Trocar um modelo existente
-1. Acesse https://artificialanalysis.ai/leaderboards/models
-2. Filtre pelo provider desejado
-3. Identifique o modelo equivalente no mesmo tier por Intelligence Index score
-4. Substitua apenas a célula correspondente na tabela `🤖 TABELA DE MODELOS`
-5. Atualize o custo na tabela de referência de preço
+### TASK CLASSIFICATION
+- Tier: [LIGHT | MEDIUM | HEAVY]
+- Reason: [Technical phrase referencing the determining criteria]
+- Files: ~[N] files | ~[N] generated tokens
 
-### Adicionar uma empresa nova (ex.: OpenAI/GPT)
-1. Adicione uma coluna nova na tabela de modelos com 3 tiers (H/M/L)
-2. Use artificialanalysis.ai para identificar os 3 modelos por score:
+### SUGGESTED MODELS
+- Claude: [model]
+- Gemini: [model]
+- GLM: [model]
+- Grok: [model]
+
+---
+
+## 🔄 MODEL UPDATE PROTOCOL (for the AI)
+
+If the user requests to swap, add, or remove models from this skill,
+execute autonomously following this protocol:
+
+### Swap an existing model
+1. Access https://artificialanalysis.ai/leaderboards/models
+2. Filter by the desired provider
+3. Identify the equivalent model in the same tier by Intelligence Index score
+4. Replace only the corresponding cell in the `🤖 MODEL TABLE`
+5. Update the cost in the price reference table
+
+### Add a new company (e.g., OpenAI/GPT)
+1. Add a new column to the model table with 3 tiers (H/M/L)
+2. Use artificialanalysis.ai to identify the 3 models by score:
    - HEAVY  = Intelligence Index ≥ 51
    - MEDIUM = Intelligence Index 44–50
    - LIGHT  = Intelligence Index ≤ 43
-3. Adicione os custos na tabela de referência de preço
-4. Adicione a linha correspondente no bloco `📤 FORMATO DO BLOCO DE SAÍDA`
-5. Registre a alteração na tabela `🗓️ HISTÓRICO`
+3. Add costs to the price reference table
+4. Add the corresponding line to the `📤 OUTPUT BLOCK FORMAT` block
+5. Log the change in the `🗓️ HISTORY` table
 
-### Remover uma empresa
-1. Delete a coluna da empresa na tabela de modelos
-2. Delete a linha de custo correspondente
-3. Delete a linha no bloco `📤 FORMATO DO BLOCO DE SAÍDA`
-4. Registre a alteração na tabela `🗓️ HISTÓRICO`
+### Remove a company
+1. Delete the company column from the model table
+2. Delete the corresponding cost row
+3. Delete the line in the `📤 OUTPUT BLOCK FORMAT` block
+4. Log the change in the `🗓️ HISTORY` table
 
-> A IA pode executar essas trocas de forma autônoma a pedido do usuário,
-> sem necessidade de re-explicar a lógica ou o site de referência.
+> The AI may execute these changes autonomously at the user's request,
+> without needing to re-explain the logic or the reference site.
 
 ---
 
-## 💡 EXEMPLOS DE CLASSIFICAÇÃO
+## 💡 CLASSIFICATION EXAMPLES
 
-| Tarefa                                                         | Tier   | Critério principal                           |
+| Task                                                         | Tier   | Main Criterion                               |
 |----------------------------------------------------------------|--------|----------------------------------------------|
-| Mudar texto de um botão                                        | LIGHT  | Alteração de valor literal                   |
-| Corrigir cor de um componente no CSS                           | LIGHT  | Mudança de estilo sem lógica                 |
-| Criar componente de card com props e renderização condicional  | MEDIUM | Componente novo com estado/props             |
-| Adicionar filtro por data em listagem existente                | MEDIUM | Filtro com lógica nova delimitada            |
-| Adicionar validação de email no cadastro                       | MEDIUM | Validação com regra de negócio nova          |
-| Integrar webhook de pagamento com retry e log                  | HEAVY  | Sistema financeiro + worker assíncrono       |
-| Refatorar lógica de auth para hook compartilhado               | HEAVY  | Afeta ≥3 consumidores + domínio de segurança |
-| Migrar tabela de banco sem downtime                            | HEAVY  | Schema migration em produção                 |
+| Change button text                                             | LIGHT  | Literal value change                         |
+| Correct component color in CSS                                 | LIGHT  | Style change without logic                   |
+| Create card component with props and conditional render        | MEDIUM | New component with state/props               |
+| Add date filter to existing list                               | MEDIUM | Filter with new delimited logic              |
+| Add email validation to registration                           | MEDIUM | Validation with new business rule            |
+| Integrate payment webhook with retry/logging                   | HEAVY  | Financial system + async worker              |
+| Refactor auth logic to shared hook                             | HEAVY  | Affects ≥3 consumers + security domain       |
+| Database table migration without downtime                      | HEAVY  | Schema migration in production               |
 
 ---
 
-## 🗓️ HISTÓRICO DE ATUALIZAÇÕES
+## 🗓️ HISTORY
 
-| Data       | Alteração                                                    |
+| Date       | Change                                                       |
 |------------|--------------------------------------------------------------|
-| 20/04/2026 | Versão 2.0 — critérios técnicos, plan-only, fonte documentada|
+| 04/20/2026 | Version 2.0 — technical criteria, plan-only, referenced source|
+| 05/02/2026 | Full English translation, updated block format to raw markdown|
