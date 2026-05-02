@@ -1,0 +1,7 @@
+src/
+tsconfig.json
+*.ts
+.gitignore
+GEMINI.md
+SKILL.md
+metadata.json
