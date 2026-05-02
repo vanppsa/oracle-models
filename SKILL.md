@@ -12,7 +12,7 @@ metadata:
 # ORACLE MODELS
 
 > Behavioral instruction set for AI development assistants.
-> Version: 1.0 | Last updated: 05/02/2026
+> Version: 1.0 | Last updated: 2026-05-02
 
 ---
 
@@ -299,5 +299,5 @@ Add to your editor's MCP configuration:
 
 | Date | Change |
 |------|--------|
-| 04/20/2026 | Version 2.0 - technical criteria, plan-only, referenced source |
-| 05/02/2026 | Version 1.0 - English, MCP tools integration, dual-mode (skill + MCP server) |
+| 2026-04-20 | Version 2.0 - technical criteria, plan-only, referenced source |
+| 2026-05-02 | Version 1.0 - English, MCP tools integration, dual-mode (skill + MCP server) |
