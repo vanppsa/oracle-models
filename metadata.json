@@ -1,0 +1,10 @@
+{
+  "version": "3.0.0",
+  "organization": "vanppsa",
+  "date": "2026-05-02",
+  "abstract": "Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests cost-efficient AI models per provider. Works as both a behavioral skill and an MCP server.",
+  "references": [
+    "https://artificialanalysis.ai/leaderboards/models",
+    "https://github.com/vanppsa/oracle-models"
+  ]
+}
