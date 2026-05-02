@@ -5,14 +5,14 @@ license: MIT
 compatibility: opencode
 metadata:
   author: vanppsa
-  version: "3.0"
+  version: "1.0"
   audience: developers
 ---
 
 # ORACLE MODELS
 
 > Behavioral instruction set for AI development assistants.
-> Version: 3.0 | Last updated: 05/02/2026
+> Version: 1.0 | Last updated: 05/02/2026
 
 ---
 
@@ -300,4 +300,4 @@ Add to your editor's MCP configuration:
 | Date | Change |
 |------|--------|
 | 04/20/2026 | Version 2.0 - technical criteria, plan-only, referenced source |
-| 05/02/2026 | Version 3.0 - English, MCP tools integration, dual-mode (skill + MCP server) |
+| 05/02/2026 | Version 1.0 - English, MCP tools integration, dual-mode (skill + MCP server) |
