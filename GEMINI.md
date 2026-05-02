@@ -9,6 +9,8 @@ The core of this project is a behavioral instruction set for AI assistants. It a
 ## Directory Structure
 
 - `SKILL.md`: The primary source file containing the skill's logic, activation rules, classification criteria, and AI model tables.
+- `src/`: Contains core classification logic (`classify.ts`) and live data fetching (`models.ts`).
+- `data/`: Contains the `fallback.json` file for emergency model data.
 - `GEMINI.md`: This file, providing project context and usage guidelines.
 
 ## Skill Functionality
