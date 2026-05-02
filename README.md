@@ -1,6 +1,6 @@
 # Oracle Models
 
-[![npm](https://img.shields.io/npm/v/@oracle-models/mcp?label=npm)](https://www.npmjs.com/package/@oracle-models/mcp) [![skills](https://img.shields.io/badge/skills.sh-installable-blue)](https://skills.sh) [![MCP](https://img.shields.io/badge/MCP-compatible-green)](https://modelcontextprotocol.io) [![license](https://img.shields.io/badge/license-MIT-brightgreen)](./LICENSE)
+[![npm](https://img.shields.io/npm/v/oracle-models-mcp?label=npm)](https://www.npmjs.com/package/oracle-models-mcp) [![skills](https://img.shields.io/badge/skills.sh-installable-blue)](https://skills.sh) [![MCP](https://img.shields.io/badge/MCP-compatible-green)](https://modelcontextprotocol.io) [![license](https://img.shields.io/badge/license-MIT-brightgreen)](./LICENSE)
 
 Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model per provider — works as both an **MCP server** (live tools) and an **agent skill** (behavioral instructions).
 
@@ -63,7 +63,7 @@ Add to `~/.config/opencode/opencode.json`:
   "mcp": {
     "oracle-models": {
       "type": "local",
-      "command": ["npx", "-y", "@oracle-models/mcp"],
+      "command": ["npx", "-y", "oracle-models-mcp"],
       "enabled": true,
       "timeout": 10000
     }
@@ -80,7 +80,7 @@ Add to `~/.gemini/settings.json`:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"],
+      "args": ["-y", "oracle-models-mcp"],
       "timeout": 10000
     }
   }
@@ -90,13 +90,13 @@ Add to `~/.gemini/settings.json`:
 Or via CLI:
 
 ```bash
-gemini mcp add oracle-models -- npx -y @oracle-models/mcp
+gemini mcp add oracle-models -- npx -y oracle-models-mcp
 ```
 
 ### Claude Code
 
 ```bash
-claude mcp add oracle-models -- npx -y @oracle-models/mcp
+claude mcp add oracle-models -- npx -y oracle-models-mcp
 ```
 
 ### Cursor
@@ -108,7 +108,7 @@ Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }
@@ -123,7 +123,7 @@ Add to `.cline/mcp.json` or via Cline settings → MCP Servers:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }
@@ -138,7 +138,7 @@ Add to `.codeium/windsurf/mcp.json` or via Windsurf settings → MCP:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }
@@ -153,7 +153,7 @@ Add to `~/.codex/mcp.json` or via Codex settings:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }
@@ -168,7 +168,7 @@ Add to `.roo/mcp.json` or via Roo Code settings → MCP:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }
@@ -183,7 +183,7 @@ Add to `~/.config/goose/mcp.json`:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }
@@ -192,7 +192,7 @@ Add to `~/.config/goose/mcp.json`:
 Or via CLI:
 
 ```bash
-goose session --with-mcp oracle-models -- npx -y @oracle-models/mcp
+goose session --with-mcp oracle-models -- npx -y oracle-models-mcp
 ```
 
 ### Kiro CLI
@@ -204,7 +204,7 @@ Add to `.kiro/mcp.json`:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }
@@ -219,7 +219,7 @@ Add to `.vscode/mcp.json` or via VS Code settings → MCP:
   "servers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }
@@ -395,7 +395,7 @@ npm run start
 
 ### Publishing
 
-The MCP server is published on npm as `@oracle-models/mcp`:
+The MCP server is published on npm as `oracle-models-mcp`:
 
 ```bash
 npm run build

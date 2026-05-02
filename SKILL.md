@@ -240,7 +240,7 @@ If the user requests to swap, add, or remove models from this skill, execute aut
 
 ## MCP SERVER SETUP
 
-This skill is also available as an MCP server (`@oracle-models/mcp`) for any MCP-compatible client:
+This skill is also available as an MCP server (`oracle-models-mcp`) for any MCP-compatible client:
 
 ### opencode
 
@@ -250,7 +250,7 @@ Add to `~/.config/opencode/opencode.json`:
   "mcp": {
     "oracle-models": {
       "type": "local",
-      "command": ["npx", "-y", "@oracle-models/mcp"],
+      "command": ["npx", "-y", "oracle-models-mcp"],
       "enabled": true,
       "timeout": 10000
     }
@@ -266,7 +266,7 @@ Add to `~/.gemini/settings.json`:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"],
+      "args": ["-y", "oracle-models-mcp"],
       "timeout": 10000
     }
   }
@@ -276,7 +276,7 @@ Add to `~/.gemini/settings.json`:
 ### Claude Code
 
 ```bash
-claude mcp add oracle-models -- npx -y @oracle-models/mcp
+claude mcp add oracle-models -- npx -y oracle-models-mcp
 ```
 
 ### Cursor / Cline / Windsurf
@@ -287,7 +287,7 @@ Add to your editor's MCP configuration:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }

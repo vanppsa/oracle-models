@@ -64,7 +64,7 @@ Classification is driven by regex patterns in `src/classify.ts`:
 - **Tool Definitions**: When updating tools in `src/server.ts`, ensure descriptions include self-identification hints for AI models (e.g., "If you are Claude → pass preferred_provider: 'anthropic'").
 
 ### Deployment / Distribution
-- The project is designed to be run as an npx package: `@oracle-models/mcp`.
+- The project is designed to be run as an npx package: `oracle-models-mcp`.
 - Ensure `dist/index.js` is up-to-date before publishing.
 
 ---
@@ -76,7 +76,7 @@ Add to `~/.gemini/settings.json`:
   "mcpServers": {
     "oracle-models": {
       "command": "npx",
-      "args": ["-y", "@oracle-models/mcp"]
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }

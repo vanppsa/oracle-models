@@ -1,10 +1,33 @@
 {
-  "name": "@oracle-models/mcp",
+  "name": "oracle-models-mcp",
   "version": "1.0.0",
   "description": "MCP Server — classifies dev tasks and suggests cost-efficient AI models",
+  "license": "MIT",
+  "author": "vanppsa",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vanppsa/oracle-models.git"
+  },
+  "homepage": "https://github.com/vanppsa/oracle-models#readme",
+  "keywords": [
+    "mcp",
+    "ai",
+    "models",
+    "claude",
+    "gemini",
+    "glm",
+    "grok",
+    "classification",
+    "cost-optimization"
+  ],
   "bin": {
     "oracle-models-mcp": "dist/index.js"
   },
+  "files": [
+    "dist/",
+    "data/",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
