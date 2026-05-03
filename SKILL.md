@@ -1,18 +1,18 @@
 ---
 name: oracle-models
-description: Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model per provider (Claude, Gemini, GLM, Grok). Activates only during plan mode. Models ranked by artificialanalysis.ai Intelligence Index. Updatable by any AI without manual reconfiguration. Works as both a skill (behavioral instructions) and an MCP server (live tools).
+description: Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model per provider (Claude, Gemini, GLM, Grok, GPT). Activates only during plan mode. Models ranked by artificialanalysis.ai Intelligence Index. Updatable by any AI without manual reconfiguration. Works as both a skill (behavioral instructions) and an MCP server (live tools).
 license: MIT
 compatibility: opencode
 metadata:
   author: vanppsa
-  version: "1.0"
+  version: "2.0"
   audience: developers
 ---
 
 # ORACLE MODELS
 
 > Behavioral instruction set for AI development assistants.
-> Version: 1.0 | Last updated: 2026-05-02
+> Version: 2.0 | Last updated: 2026-05-02
 
 ---
 
@@ -50,7 +50,7 @@ Call after classification to get the recommended models for the tier.
 
 ```
 get_model_suggestions(tier: "LIGHT" | "MEDIUM" | "HEAVY", preferred_provider?: "anthropic" | "google" | "zai" | "xai" | "openai")
-→ { tier, updated_at, data_source, models: { claude, gemini, glm, grok }, suggested_first? }
+→ { tier, updated_at, data_source, models: { claude, gemini, glm, grok, openai }, suggested_first? }
 ```
 
 ### `format_plan_block`
@@ -80,6 +80,34 @@ format_plan_block(tier, reason, estimated_files, estimated_tokens, preferred_pro
 
 ---
 
+## LIVE DATA VIA API (OPTIONAL)
+
+The MCP server can fetch live model data from the Artificial Analysis API.
+
+### Setup
+
+1. Create a free account at [https://artificialanalysis.ai/login](https://artificialanalysis.ai/login)
+2. Generate an API key in the Insights Platform
+3. Set the environment variable:
+   ```bash
+   export AA_API_KEY=your_api_key_here
+   ```
+4. The MCP server will automatically fetch live data and cache it for 7 days
+
+### Without API key
+
+If `AA_API_KEY` is not configured, the server uses local fallback data from `data/fallback.json`. This data is updated periodically but may not reflect the latest model releases or score changes.
+
+### API details
+
+- **Endpoint:** `https://artificialanalysis.ai/api/v2/data/llms/models`
+- **Auth:** `x-api-key` header
+- **Rate limit:** 1,000 requests/day (free tier)
+- **Cache:** 7 days locally in `~/.oracle-models/cache.json`
+- **Attribution:** Data sourced from [artificialanalysis.ai](https://artificialanalysis.ai/)
+
+---
+
 ## MANUAL CLASSIFICATION (FALLBACK)
 
 If MCP tools are NOT available, classify manually using the criteria below.
@@ -92,26 +120,26 @@ If MCP tools are NOT available, classify manually using the criteria below.
 
 - Independent methodology (not self-reported by providers)
 - Covers: Intelligence Index, blended price, speed (tokens/s), latency
-- Continuous updates with 100+ tracked models
+- Continuous updates with 350+ tracked models
 - To update models: access the site, filter by company, and replace entries in the table below
 
 ---
 
 ### MODEL TABLE (May 2026)
 
-| Tier | AA Score | Claude (Anthropic) | Gemini (Google) | GLM (Z.ai) | Grok (xAI) |
-|---------------|----------|--------------------|------------------------|-------------|------------------|
-| HEAVY (H) | 51-57 | Claude Opus 4.7 | Gemini 3.1 Pro | GLM-5.1 | Grok 4.20 |
-| MEDIUM (M) | 44-50 | Claude Sonnet 4.6 | Gemini 3 Flash | GLM-5 | Grok 4 Fast |
-| LIGHT (L) | <=43 | Claude Haiku 4.5 | Gemini 3.1 Flash Lite | GLM-4.7 | Grok 4.1 |
+| Tier | AA Score | Claude (Anthropic) | Gemini (Google) | GLM (Z.ai) | Grok (xAI) | GPT (OpenAI) |
+|------|----------|--------------------|------------------------|-------------|------------------|---------------------|
+| HEAVY (H) | 51-60 | Claude Opus 4.7 (max) | Gemini 3.1 Pro Preview | GLM-5.1 (Reasoning) | Grok 4.3 | GPT-5.5 (xhigh) |
+| MEDIUM (M) | 38-52 | Claude Sonnet 4.6 (max) | Gemini 3 Flash Preview | GLM-5 (Reasoning) | Grok 4.1 Fast (Reasoning) | GPT-5.4 mini (xhigh) |
+| LIGHT (L) | <=44 | Claude 4.5 Haiku (Reasoning) | Gemini 3.1 Flash-Lite Preview | GLM-4.7-Flash (Reasoning) | Grok 4.1 Fast (Non-reasoning) | GPT-5.4 nano (xhigh) |
 
 ### Cost Reference (blended USD/1M tokens)
 
-| Tier | Claude | Gemini | GLM | Grok |
-|------|----------------|----------------------|-----------|---------|
-| H | $10.00 (Opus) | $4.50 (3.1 Pro) | $2.15 | $3.00 |
-| M | $6.00 (Sonnet) | $1.13 (3 Flash) | $1.55 | ~$0.80 |
-| L | ~$1.50 (Haiku) | ~$0.15 (Flash Lite) | ~$0.20 | $0.20 |
+| Tier | Claude | Gemini | GLM | Grok | GPT |
+|------|----------------|----------------------|-----------|---------|---------|
+| H | $10.00 (Opus) | $4.50 (3.1 Pro) | $2.15 | $1.56 | $11.25 |
+| M | $6.56 (Sonnet) | $1.13 (3 Flash) | $1.55 | $0.28 | $1.69 |
+| L | $2.19 (Haiku) | $0.56 (Flash-Lite) | $0.15 | $0.28 | $0.46 |
 
 ---
 
@@ -191,6 +219,7 @@ At the end of any action plan activating this skill, add exactly this block:
 - Gemini: [model]
 - GLM: [model]
 - Grok: [model]
+- GPT: [model]
 
 ---
 
@@ -205,12 +234,12 @@ If the user requests to swap, add, or remove models from this skill, execute aut
 4. Replace only the corresponding cell in the MODEL TABLE
 5. Update the cost in the price reference table
 
-### Add a new company (e.g., OpenAI/GPT)
+### Add a new company (e.g., DeepSeek)
 1. Add a new column to the model table with 3 tiers (H/M/L)
 2. Use artificialanalysis.ai to identify the 3 models by score:
    - HEAVY = Intelligence Index >= 51
-   - MEDIUM = Intelligence Index 44-50
-   - LIGHT = Intelligence Index <= 43
+   - MEDIUM = Intelligence Index 38-50
+   - LIGHT = Intelligence Index <= 44
 3. Add costs to the price reference table
 4. Add the corresponding line to the OUTPUT BLOCK FORMAT block
 5. Log the change in the HISTORY table
@@ -293,6 +322,30 @@ Add to your editor's MCP configuration:
 }
 ```
 
+### Live data setup (optional)
+
+To enable live model data from Artificial Analysis API, set the `AA_API_KEY` environment variable before starting the MCP server:
+
+```bash
+export AA_API_KEY=your_api_key_here
+npx -y oracle-models-mcp
+```
+
+Or configure in your MCP setup:
+```json
+{
+  "mcpServers": {
+    "oracle-models": {
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"],
+      "env": {
+        "AA_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
 ---
 
 ## HISTORY
@@ -301,3 +354,4 @@ Add to your editor's MCP configuration:
 |------|--------|
 | 2026-04-20 | Version 2.0 - technical criteria, plan-only, referenced source |
 | 2026-05-02 | Version 1.0 - English, MCP tools integration, dual-mode (skill + MCP server) |
+| 2026-05-02 | Version 2.0 - Added OpenAI/GPT provider, AA API v2 integration, decimal scores, live data via AA_API_KEY, updated all model data |
