@@ -5,14 +5,14 @@ license: MIT
 compatibility: opencode
 metadata:
   author: vanppsa
-  version: "2.0"
+  version: "1.0.0"
   audience: developers
 ---
 
 # ORACLE MODELS
 
 > Behavioral instruction set for AI development assistants.
-> Version: 2.0 | Last updated: 2026-05-02
+> Version: 1.0.0 | Last updated: 2026-05-02
 
 ---
 

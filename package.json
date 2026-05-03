@@ -31,7 +31,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "version": "node scripts/sync-version.js && git add src/server.ts metadata.json SKILL.md"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.1",
