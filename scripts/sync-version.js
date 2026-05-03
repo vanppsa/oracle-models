@@ -18,7 +18,7 @@ fs.writeFileSync(metadataJson, JSON.stringify(metadata, null, 2) + "\n");
 const skillMd = path.join(root, "SKILL.md");
 let skill = fs.readFileSync(skillMd, "utf8");
 skill = skill.replace(/version:\s*"[^"]+"/, `version: "${version}"`);
-skill = skill.replace(/Version:\s*\d+\.\d+/, `Version: ${version}`);
+skill = skill.replace(/Version:\s*[\d.]+/, `Version: ${version}`);
 fs.writeFileSync(skillMd, skill);
 
 console.log(`synced version ${version} across all files`);
