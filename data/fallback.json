@@ -1,23 +1,26 @@
 {
-  "updated_at": "2026-04-20",
+  "updated_at": "2026-05-02",
   "tiers": {
     "HEAVY": {
-      "claude":  { "name": "Claude Opus 4.7",       "score": 57, "price": 10.00 },
-      "gemini":  { "name": "Gemini 3.1 Pro",        "score": 55, "price": 4.50  },
-      "glm":     { "name": "GLM-5.1",               "score": 53, "price": 2.15  },
-      "grok":    { "name": "Grok 4.20",             "score": 51, "price": 3.00  }
+      "claude": { "name": "Claude Opus 4.7 (max)", "score": 57.3, "price": 10.00 },
+      "gemini": { "name": "Gemini 3.1 Pro Preview", "score": 57.2, "price": 4.50 },
+      "glm": { "name": "GLM-5.1 (Reasoning)", "score": 51.4, "price": 2.15 },
+      "grok": { "name": "Grok 4.3", "score": 53.2, "price": 1.56 },
+      "openai": { "name": "GPT-5.5 (xhigh)", "score": 60.2, "price": 11.25 }
     },
     "MEDIUM": {
-      "claude":  { "name": "Claude Sonnet 4.6",     "score": 50, "price": 6.00  },
-      "gemini":  { "name": "Gemini 3 Flash",        "score": 48, "price": 1.13  },
-      "glm":     { "name": "GLM-5",                 "score": 46, "price": 1.55  },
-      "grok":    { "name": "Grok 4 Fast",           "score": 44, "price": 0.80  }
+      "claude": { "name": "Claude Sonnet 4.6 (max)", "score": 51.7, "price": 6.56 },
+      "gemini": { "name": "Gemini 3 Flash Preview", "score": 46.4, "price": 1.13 },
+      "glm": { "name": "GLM-5 (Reasoning)", "score": 49.8, "price": 1.55 },
+      "grok": { "name": "Grok 4.1 Fast (Reasoning)", "score": 38.6, "price": 0.28 },
+      "openai": { "name": "GPT-5.4 mini (xhigh)", "score": 48.9, "price": 1.69 }
     },
     "LIGHT": {
-      "claude":  { "name": "Claude Haiku 4.5",      "score": 43, "price": 1.50  },
-      "gemini":  { "name": "Gemini 3.1 Flash Lite", "score": 40, "price": 0.15  },
-      "glm":     { "name": "GLM-4.7",               "score": 38, "price": 0.20  },
-      "grok":    { "name": "Grok 4.1",              "score": 36, "price": 0.20  }
+      "claude": { "name": "Claude 4.5 Haiku (Reasoning)", "score": 37.1, "price": 2.19 },
+      "gemini": { "name": "Gemini 3.1 Flash-Lite Preview", "score": 33.5, "price": 0.56 },
+      "glm": { "name": "GLM-4.7-Flash (Reasoning)", "score": 30.1, "price": 0.15 },
+      "grok": { "name": "Grok 4.1 Fast (Non-reasoning)", "score": 23.6, "price": 0.28 },
+      "openai": { "name": "GPT-5.4 nano (xhigh)", "score": 44.0, "price": 0.46 }
     }
   }
 }

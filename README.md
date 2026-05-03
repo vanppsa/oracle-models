@@ -4,6 +4,8 @@
 
 Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model per provider — works as both an **MCP server** (live tools) and an **agent skill** (behavioral instructions).
 
+Providers: **Claude** (Anthropic), **Gemini** (Google), **GLM** (Z.ai), **Grok** (xAI), **GPT** (OpenAI).
+
 Data sourced from the [Artificial Analysis Intelligence Index](https://artificialanalysis.ai/leaderboards/models).
 
 ---
@@ -289,14 +291,15 @@ Returns recommended models for a tier with scores and pricing.
 ```json
 {
   "tier": "MEDIUM",
-  "updated_at": "2026-04-20",
+  "updated_at": "2026-05-02",
   "data_source": "cache",
   "suggested_first": "claude",
   "models": {
-    "claude": { "name": "Claude Sonnet 4.6", "score": 50, "price_blended_usd_per_1m": 6.00 },
-    "gemini": { "name": "Gemini 3 Flash", "score": 48, "price_blended_usd_per_1m": 1.13 },
-    "glm": { "name": "GLM-5", "score": 46, "price_blended_usd_per_1m": 1.55 },
-    "grok": { "name": "Grok 4 Fast", "score": 44, "price_blended_usd_per_1m": 0.80 }
+    "claude": { "name": "Claude Sonnet 4.6 (max)", "score": 51.7, "price_blended_usd_per_1m": 6.56 },
+    "gemini": { "name": "Gemini 3 Flash Preview", "score": 46.4, "price_blended_usd_per_1m": 1.13 },
+    "glm": { "name": "GLM-5 (Reasoning)", "score": 49.8, "price_blended_usd_per_1m": 1.55 },
+    "grok": { "name": "Grok 4.1 Fast (Reasoning)", "score": 38.6, "price_blended_usd_per_1m": 0.28 },
+    "openai": { "name": "GPT-5.4 mini (xhigh)", "score": 48.9, "price_blended_usd_per_1m": 1.69 }
   }
 }
 ```
@@ -333,15 +336,16 @@ Generates the formatted classification block to append at the end of a plan.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📋 TASK CLASSIFICATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Tier    : MEDIUM
-Reason  : Inclusion of complex business rules/validations
-Files   : ~2–5 files | ~200–800 tokens generated
+Tier     : MEDIUM
+Reason   : Inclusion of complex business rules/validations
+Files    : ~2–5 files | ~200–800 tokens generated
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🤖 SUGGESTED MODELS FOR EXECUTION
-Claude  : Claude Sonnet 4.6 ✨ (Suggested for your environment)
-Gemini  : Gemini 3 Flash
-GLM     : GLM-5
-Grok    : Grok 4 Fast
+Claude   : Claude Sonnet 4.6 (max) ✨ (Suggested for your environment)
+Gemini   : Gemini 3 Flash Preview
+GLM      : GLM-5 (Reasoning)
+Grok     : Grok 4.1 Fast (Reasoning)
+GPT      : GPT-5.4 mini (xhigh)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -365,13 +369,46 @@ If the MCP server is not configured, the skill contains the full classification 
 
 ## Cache and Offline Support
 
-Model data is cached locally in `~/.oracle-models/cache.json` and renewed every 7 days. The server follows a 3-tier data strategy:
+Model data follows a 3-tier data strategy:
 
 1. **Cache** — check `~/.oracle-models/cache.json` (7-day TTL)
-2. **Live** — fetch from artificialanalysis.ai
+2. **Live** — fetch from [Artificial Analysis API v2](https://artificialanalysis.ai/api/v2/data/llms/models) (requires `AA_API_KEY`)
 3. **Fallback** — use bundled `data/fallback.json`
 
-If the remote source is unreachable, the server transparently uses fallback data. No API keys required.
+If the remote source is unreachable or no API key is configured, the server transparently uses fallback data.
+
+### Live Data Setup (Optional)
+
+To enable live model data updates from Artificial Analysis:
+
+1. Create a free account at [https://artificialanalysis.ai/login](https://artificialanalysis.ai/login)
+2. Generate an API key in the Insights Platform
+3. Set the `AA_API_KEY` environment variable:
+
+```bash
+export AA_API_KEY=your_api_key_here
+```
+
+Or configure in your MCP setup:
+
+```json
+{
+  "mcpServers": {
+    "oracle-models": {
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"],
+      "env": {
+        "AA_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+- **Rate limit:** 1,000 requests/day (free tier)
+- **Cache:** 7 days locally
+- **Attribution:** Data sourced from [artificialanalysis.ai](https://artificialanalysis.ai/)
+- **Without API key:** The server uses bundled fallback data (updated periodically)
 
 ---
 

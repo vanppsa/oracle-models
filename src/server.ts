@@ -39,7 +39,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_model_suggestions",
-        description: "Returns the suggested models for a tier with updated prices. If you are Claude → pass preferred_provider: 'anthropic'. If you are Gemini → pass preferred_provider: 'google'. If you are GPT → pass preferred_provider: 'openai'. If you are Grok → pass preferred_provider: 'xai'.",
+        description: "Returns the suggested models for a tier with updated prices. If you are Claude → pass preferred_provider: 'anthropic'. If you are Gemini → pass preferred_provider: 'google'. If you are GLM → pass preferred_provider: 'zai'. If you are Grok → pass preferred_provider: 'xai'. If you are GPT → pass preferred_provider: 'openai'.",
         inputSchema: {
           type: "object",
           properties: {
@@ -50,7 +50,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             preferred_provider: {
               type: "string",
-              enum: ["anthropic", "google", "zai", "xai", "openai"],
+                    enum: ["anthropic", "google", "zai", "xai", "openai"],
               description: "Preferred provider to highlight (optional)",
             },
           },
