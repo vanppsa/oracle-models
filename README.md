@@ -353,17 +353,30 @@ GPT      : GPT-5.4 mini (xhigh)
 
 ## How It Works
 
+**Oracle Models** ensures you use the right AI model for the right job. It distinguishes between **planning** (designing the solution) and **execution** (actually writing the code or configuring the system).
+
 ### Recommended workflow (MCP tools available)
 
-1. The AI produces a multi-step action plan
-2. Calls `classify_task` with the task description
-3. Calls `get_model_suggestions` with the returned tier
-4. Calls `format_plan_block` to generate the output block
-5. Appends the block at the end of the plan
+1. The AI produces a multi-step action plan.
+2. **Classification**: The AI calls `classify_task` to evaluate the complexity of **EXECUTING** the plan it just wrote.
+3. **Suggestion**: The AI calls `get_model_suggestions` to find the best models for that specific execution tier.
+4. **Integration**: The AI appends the formatted classification block at the end of the response.
 
 ### Fallback workflow (skill only, no MCP)
 
-If the MCP server is not configured, the skill contains the full classification criteria and model tables. The AI classifies manually using the regex patterns and hardcoded data in `SKILL.md`.
+If the MCP server is not configured, the skill contains the full classification criteria and model tables. The AI classifies manually using the rules defined in `SKILL.md`.
+
+---
+
+## Classification Criteria (Execution Focus)
+
+The classification ALWAYS refers to the complexity of **executing** the plan.
+
+| Tier | Profile | Triggers (Execution) | Expected scope |
+|------|---------|----------|----------------|
+| **LIGHT** | Low-entropy transformation | ≥2 of: literal change, style-only, rename, form field, route adjust, i18n, copy/adapt, typo, single-tool install | 1–2 files, <200 tokens |
+| **MEDIUM** | New logic in delimited scope | ≥2 of: new component/state, signature change, complex validation, new endpoint, hook/composable, feature flag, data migration, multi-service config | 2–5 files, 200–800 tokens |
+| **HEAVY** | High decision entropy, systemic risk | ≥1 of: shared logic extraction, architecture redesign, auth/security, external integration, non-deterministic bugs, DB migration, infra orchestration | 5+ files, 800+ tokens |
 
 ---
 
@@ -409,16 +422,6 @@ Or configure in your MCP setup:
 - **Cache:** 7 days locally
 - **Attribution:** Data sourced from [artificialanalysis.ai](https://artificialanalysis.ai/)
 - **Without API key:** The server uses bundled fallback data (updated periodically)
-
----
-
-## Classification Criteria
-
-| Tier | Profile | Triggers | Expected scope |
-|------|---------|----------|----------------|
-| **LIGHT** | Low-entropy deterministic transformation | ≥2 of: literal change, style-only, rename, form field, route adjust, i18n, copy/adapt, typo | 1–2 files, <200 tokens |
-| **MEDIUM** | New logic in a delimited scope | ≥2 of: new component/state, signature change, complex validation, new endpoint, hook/composable, feature flag, data migration, pagination/filter, bug fix ≤3 files, simple infra | 2–5 files, 200–800 tokens |
-| **HEAVY** | High decision entropy, systemic risk | ≥1 of: shared logic extraction ≥3 consumers, architecture redesign, auth/security, external integration, non-deterministic bugs, DB schema migration, performance profiling, billing/payment, data pipeline/ETL, security/compliance domain, full dependency graph refactoring | 5+ files, 800+ tokens |
 
 ---
 
