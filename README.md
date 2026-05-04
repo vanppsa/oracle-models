@@ -332,21 +332,26 @@ Generates the formatted classification block to append at the end of a plan.
 
 **Response:**
 
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 TASK CLASSIFICATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Tier     : MEDIUM
-Reason   : Inclusion of complex business rules/validations
-Files    : ~2–5 files | ~200–800 tokens generated
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🤖 SUGGESTED MODELS FOR EXECUTION
-Claude   : Claude Sonnet 4.6 (max) ✨ (Suggested for your environment)
-Gemini   : Gemini 3 Flash Preview
-GLM      : GLM-5 (Reasoning)
-Grok     : Grok 4.1 Fast (Reasoning)
-GPT      : GPT-5.4 mini (xhigh)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```markdown
+---
+
+### 📋 TASK CLASSIFICATION
+- **Tier:** `MEDIUM`
+- **Reason:** Inclusion of complex business rules/validations
+- **Estimated Scope:** ~2–5 files | ~200–800 tokens generated
+
+### 🤖 SUGGESTED MODELS FOR EXECUTION
+| Provider | Model |
+|----------|-------|
+| Claude | Claude Sonnet 4.6 (max) ✨ (Suggested for your environment) |
+| Gemini | Gemini 3 Flash Preview |
+| GLM | GLM-5 (Reasoning) |
+| Grok | Grok 4.1 Fast (Reasoning) |
+| GPT | GPT-5.4 mini (xhigh) |
+
+---
+
+> **Note:** The classification refers to the complexity of **executing** this plan, not creating it.
 ```
 
 ---
