@@ -30,7 +30,9 @@ const MEDIUM_CRITERIA = [
   { pattern: /data migration.*transformation/i, reason: "Local data migration and transformation" },
   { pattern: /pagination|filter|sorting/i, reason: "Addition of list manipulation (filtering, sorting, pagination)" },
   { pattern: /identified cause.*bug/i, reason: "Delimited bug fix" },
-  { pattern: /docker|proxy|simple pipeline|simple infrastructure/i, reason: "Configuration of simple environment/infrastructure" }
+  { pattern: /docker|proxy|simple pipeline|simple infrastructure/i, reason: "Configuration of simple environment/infrastructure" },
+  { pattern: /unit test|integration test|test coverage|test case/i, reason: "Implementation or expansion of test suite" },
+  { pattern: /environment variable|config file|\.env|configuration settings/i, reason: "Environment or system configuration changes" }
 ];
 
 const LIGHT_CRITERIA = [
@@ -39,8 +41,9 @@ const LIGHT_CRITERIA = [
   { pattern: /rename|rename.*variable|rename.*function/i, reason: "Safe renaming without public impact" },
   { pattern: /addition.*field.*form|removal.*field/i, reason: "Adjustment in existing form without complex validation" },
   { pattern: /route adjustment|path|redirect/i, reason: "Simple routing adjustments" },
-  { pattern: /translation|internationalization|i18n/i, reason: "Alteration of internationalization texts" },
-  { pattern: /copy.*block|adapt block/i, reason: "Adaptation of existing code with minimal variation" },
+  { pattern: /translation|internationalization|i18n|translate/i, reason: "Language translation or internationalization" },
+  { pattern: /documentation|readme|jsdoc|comments/i, reason: "Documentation or code commenting" },
+  { pattern: /dependency update|version bump|package update/i, reason: "Routine dependency maintenance" },
   { pattern: /typo/i, reason: "Isolated typo correction" }
 ];
 

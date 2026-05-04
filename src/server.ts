@@ -21,7 +21,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     tools: [
       {
         name: "classify_task",
-        description: "Classifies the complexity of a dev task (LIGHT, MEDIUM, HEAVY)",
+        description: "MANDATORY: Classifies the complexity of a dev task. If the user input is not in English, translate the core intent to English before calling (e.g., 'traduzir' -> 'translate').",
         inputSchema: {
           type: "object",
           properties: {
@@ -59,7 +59,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "format_plan_block",
-        description: "Generates the formatted output block ready to be pasted at the end of a plan",
+        description: "MANDATORY: Generates the formatted output block to be pasted at the end of every plan as a system protocol.",
         inputSchema: {
           type: "object",
           properties: {
