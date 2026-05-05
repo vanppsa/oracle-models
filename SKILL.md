@@ -59,16 +59,15 @@ Apply this rule regardless of whether the plan is for code, infra, configuration
 
 When using MCP tools (`format_plan_block`, `get_model_suggestions`, etc.), **never paste the raw tool call output directly into the response**.
 
-**WRONG:**
-```
-⚙ oracle-models_format_plan_block [tier=LIGHT, reason=Planning task..., estimated_files=0, ...]
-```
+**WRONG:** Exposing the raw tool invocation in the response text instead of composing the formatted block.
 
 **CORRECT:**
 1. Call the tool internally.
 2. Capture the returned data (tier, reason, models, etc.).
 3. Manually compose the final block following the OUTPUT BLOCK FORMAT defined in this skill.
 4. Append the composed block at the end of your plan response.
+
+After calling classify_task and get_model_suggestions, you MUST write the formatted output block in your response text. The tool call appearing in the UI does not replace the block — both must exist.
 
 The formatted block must always be clean markdown, integrated into the response — not a raw tool invocation dump.
 
