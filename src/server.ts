@@ -7,7 +7,7 @@ import { formatPlanBlock } from "./format";
 export const server = new Server(
   {
     name: "oracle-models",
-    version: "1.2.0",
+    version: "1.2.1",
   },
   {
     capabilities: {
