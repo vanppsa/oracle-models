@@ -5,27 +5,34 @@ license: MIT
 compatibility: opencode
 metadata:
   author: vanppsa
-  version: "1.2.0"
+  version: "1.2.1"
   audience: developers
 ---
 
 # ORACLE MODELS
 
 > Behavioral instruction set for AI development assistants.
-> Version: 1.2.0 | Last updated: 2026-05-04
+> Version: 1.2.1| Last updated: 2026-05-04
 
 ---
 
 ## ACTIVATION RULE
 
-**THIS SKILL ACTIVATES ONLY IN PLAN MODE.**
+**THIS SKILL IS MANDATORY IN PLAN MODE.**
 
-Activate the classification block ONLY when producing:
+When plan mode is active, you MUST execute the oracle workflow before presenting any plan:
+1. classify_task (the execution of the plan)
+2. get_model_suggestions (for the returned tier)
+3. Append the output block at the end of the plan
+
+This is not optional. Every plan ends with an oracle classification.
+
+Apply this workflow ONLY when producing:
 - A multi-step action plan (e.g., "Step 1... Step 2... Step 3...")
 - An analysis of how to implement a feature, fix, or refactor
 - A response describing WHAT will be done BEFORE doing it
 
-**DO NOT activate on:**
+**DO NOT apply on:**
 - Direct one-line responses (unless the user explicitly invokes the skill)
 - During code execution (ACT mode)
 - During one-off edits without prior planning
@@ -270,17 +277,15 @@ At the end of any action plan activating this skill, append exactly this block (
 
 ### 📋 TASK CLASSIFICATION
 - **Tier:** `[LIGHT | MEDIUM | HEAVY]`
-- **Reason:** [Technical phrase referencing the determining criteria of the plan'S EXECUTION]
+- **Reason:** [Technical phrase referencing the determining criteria of the plan's EXECUTION]
 - **Estimated Scope:** ~[N] files | ~[N] tokens generated
 
 ### 🤖 SUGGESTED MODELS FOR EXECUTION
-| Provider | Model |
-|----------|-------|
-| Claude | [model] |
-| Gemini | [model] |
-| GLM | [model] |
-| Grok | [model] |
-| GPT | [model] |
+Claude: [model] · Gemini: [model] · GLM: [model] · Grok: [model] · GPT: [model]
+
+---
+
+> **Note:** The classification refers to the complexity of **executing** this plan, not creating it.
 
 ---
 
