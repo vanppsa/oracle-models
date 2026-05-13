@@ -288,10 +288,6 @@ Claude: [model] · Gemini: [model] · GLM: [model] · Grok: [model] · GPT: [mod
 
 ---
 
-> **Note:** The classification refers to the complexity of **executing** this plan, not creating it.
-
----
-
 ## MODEL UPDATE PROTOCOL
 
 If the user requests to swap, add, or remove models from this skill, execute autonomously:

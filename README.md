@@ -430,6 +430,61 @@ Or configure in your MCP setup:
 
 ---
 
+## Why Reinforce in Agent Instructions?
+
+**AI agents are autonomous — they choose whether or not to call MCP tools. No skill can force them.**
+
+Oracle Models injects behavioral instructions into the agent's context, telling it when and how to classify tasks. However:
+
+- **The agent decides** whether to follow these instructions on each turn.
+- Compliance varies by model, provider, context window, conversation history, and agent configuration.
+- Even when the skill says "mandatory," the agent may skip the workflow — intentionally or by oversight.
+- This is not a bug. It is inherent to how LLM-based agents work: they interpret instructions, they do not execute them deterministically.
+
+### How to increase compliance
+
+Add the reinforcement block below to your project's agent instruction file. This gives the agent **two independent signals** — one from the skill, one from your instructions — significantly increasing the chance it follows through.
+
+**Where to add it:**
+
+- **OpenCode:** `AGENTS.md` (global or per-project)
+- **Claude Code:** `CLAUDE.md`
+- **Gemini CLI:** `GEMINI.md`
+- **Cursor:** `.cursorrules`
+- **Windsurf:** `.windsurfrules`
+- **Cline:** `.clinerules`
+- **Roo Code:** `.roorules`
+- **Codex:** `AGENTS.md` or `codex.md`
+
+### Reinforcement template
+
+Copy and paste this block into your agent's instruction file:
+
+```markdown
+## Oracle Models — Mandatory Plan Classification
+
+**RULE:** Every time my response contains a sequence of implementation steps (Step 1, Step 2... or a list of actions the user will execute), I MUST finalize the response with the Oracle Models classification block.
+
+**NOT required** when: response is explanation only, conversation, or direct code edit without a prior plan.
+
+**Mandatory workflow at the end of every plan:**
+1. Call `oracle-models > classify_task` with a description of the EXECUTION (not the planning)
+2. Call `oracle-models > get_model_suggestions` with the returned tier
+3. Compose and append the block below at the end of the response:
+
+### 📋 TASK CLASSIFICATION
+- **Tier:** `[LIGHT | MEDIUM | HEAVY]`
+- **Reason:** [Technical phrase referencing the determining criteria of the plan's EXECUTION]
+- **Estimated Scope:** ~[N] files | ~[N] tokens generated
+
+### 🤖 SUGGESTED MODELS FOR EXECUTION
+Claude: [model] · Gemini: [model] · GLM: [model] · Grok: [model] · GPT: [model]
+
+> **Note:** The classification refers to the complexity of **executing** this plan, not creating it.
+```
+
+---
+
 ## Development
 
 ```bash
