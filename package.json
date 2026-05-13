@@ -1,6 +1,6 @@
 {
   "name": "oracle-models-mcp",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "MCP Server — classifies dev tasks and suggests cost-efficient AI models",
   "license": "MIT",
   "author": "vanppsa",
