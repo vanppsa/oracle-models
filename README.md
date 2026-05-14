@@ -17,22 +17,11 @@ Data sourced from the [Artificial Analysis Intelligence Index](https://artificia
 | [OpenCode](https://opencode.ai) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a opencode -y` |
 | [Gemini CLI](https://geminicli.com) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a gemini-cli -y` |
 | [Claude Code](https://claude.com/product/claude-code) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a claude-code -y` |
-| [Cursor](https://cursor.sh) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a cursor -y` |
-| [Cline](https://cline.bot) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a cline -y` |
-| [Windsurf](https://codeium.com/windsurf) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a windsurf -y` |
 | [Codex](https://openai.com/codex) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a codex -y` |
-| [Roo Code](https://roocode.com) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a roo -y` |
-| [Goose](https://block.github.io/goose) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a goose -y` |
-| [Kiro CLI](https://kiro.dev/cli) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a kiro-cli -y` |
-| [Amp](https://ampcode.com) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a amp -y` |
-| [Augment](https://augmentcode.com) | — | Yes | `npx skills add vanppsa/oracle-models -g -a augment -y` |
-| [Trae](https://trae.ai) | — | Yes | `npx skills add vanppsa/oracle-models -g -a trae -y` |
-| [GitHub Copilot](https://github.com/features/copilot) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a github-copilot -y` |
-| [VS Code Copilot](https://code.visualstudio.com) | Yes | — | MCP only |
 
-> **MCP Server** = the 3 live tools (`classify_task`, `get_model_suggestions`, `format_plan_block`) are available.
-> **Skill** = behavioral instructions loaded into the agent's context (when to classify, criteria, output format).
-> When both are active, the skill tells the AI to call the MCP tools for live data instead of classifying manually.
+> **Other Compatible Agents:** Cursor, Cline, Windsurf, Roo Code, Goose, Kiro CLI, Amp, Augment, Trae, GitHub Copilot, VS Code Copilot.
+>
+> To install for other agents, use the same command format: `npx skills add vanppsa/oracle-models -g -a <agent-name> -y`.
 
 ---
 
@@ -56,25 +45,30 @@ The skill provides behavioral instructions, but you also need the MCP server for
 
 ## MCP Server Setup by Agent
 
-### OpenCode
-
-Add to `~/.config/opencode/opencode.json`:
+### Standard MCP Configuration
+The following agents share the same MCP configuration structure. Add this block to their respective configuration files as indicated:
 
 ```json
 {
-  "mcp": {
+  "mcpServers": {
     "oracle-models": {
-      "type": "local",
-      "command": ["npx", "-y", "oracle-models-mcp"],
-      "enabled": true,
-      "timeout": 10000
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }
 ```
 
-### Gemini CLI
+*   **Claude:** `claude mcp add oracle-models -- npx -y oracle-models-mcp`
+*   **Cursor:** Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global).
+*   **Cline:** Add to `.cline/mcp.json` or via Cline settings → MCP Servers.
+*   **Windsurf:** Add to `.codeium/windsurf/mcp.json` or via Windsurf settings → MCP.
+*   **Codex:** Add to `~/.codex/mcp.json` or via Codex settings.
+*   **Roo Code:** Add to `.roo/mcp.json` or via Roo Code settings → MCP.
+*   **Goose:** Add to `~/.config/goose/mcp.json` or via `goose session --with-mcp oracle-models -- npx -y oracle-models-mcp`.
+*   **Kiro CLI:** Add to `.kiro/mcp.json`.
 
+### Gemini CLI
 Add to `~/.gemini/settings.json`:
 
 ```json
@@ -95,125 +89,23 @@ Or via CLI:
 gemini mcp add oracle-models -- npx -y oracle-models-mcp
 ```
 
-### Claude Code
-
-```bash
-claude mcp add oracle-models -- npx -y oracle-models-mcp
-```
-
-### Cursor
-
-Add to `.cursor/mcp.json` (project) or `~/.cursor/mcp.json` (global):
+### OpenCode
+Add to `~/.config/opencode/opencode.json`:
 
 ```json
 {
-  "mcpServers": {
+  "mcp": {
     "oracle-models": {
-      "command": "npx",
-      "args": ["-y", "oracle-models-mcp"]
-    }
-  }
-}
-```
-
-### Cline
-
-Add to `.cline/mcp.json` or via Cline settings → MCP Servers:
-
-```json
-{
-  "mcpServers": {
-    "oracle-models": {
-      "command": "npx",
-      "args": ["-y", "oracle-models-mcp"]
-    }
-  }
-}
-```
-
-### Windsurf
-
-Add to `.codeium/windsurf/mcp.json` or via Windsurf settings → MCP:
-
-```json
-{
-  "mcpServers": {
-    "oracle-models": {
-      "command": "npx",
-      "args": ["-y", "oracle-models-mcp"]
-    }
-  }
-}
-```
-
-### Codex (OpenAI)
-
-Add to `~/.codex/mcp.json` or via Codex settings:
-
-```json
-{
-  "mcpServers": {
-    "oracle-models": {
-      "command": "npx",
-      "args": ["-y", "oracle-models-mcp"]
-    }
-  }
-}
-```
-
-### Roo Code
-
-Add to `.roo/mcp.json` or via Roo Code settings → MCP:
-
-```json
-{
-  "mcpServers": {
-    "oracle-models": {
-      "command": "npx",
-      "args": ["-y", "oracle-models-mcp"]
-    }
-  }
-}
-```
-
-### Goose
-
-Add to `~/.config/goose/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "oracle-models": {
-      "command": "npx",
-      "args": ["-y", "oracle-models-mcp"]
-    }
-  }
-}
-```
-
-Or via CLI:
-
-```bash
-goose session --with-mcp oracle-models -- npx -y oracle-models-mcp
-```
-
-### Kiro CLI
-
-Add to `.kiro/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "oracle-models": {
-      "command": "npx",
-      "args": ["-y", "oracle-models-mcp"]
+      "type": "local",
+      "command": ["npx", "-y", "oracle-models-mcp"],
+      "enabled": true,
+      "timeout": 10000
     }
   }
 }
 ```
 
 ### VS Code Copilot
-
 Add to `.vscode/mcp.json` or via VS Code settings → MCP:
 
 ```json
