@@ -69,7 +69,38 @@ Classification is driven by regex patterns in `src/classify.ts`:
 
 ---
 
+## Usage in Antigravity CLI
+Antigravity CLI uses a dedicated `mcp_config.json` file for MCP server configurations.
+
+**Workspace:** Add to `.agents/mcp_config.json`:
+```json
+{
+  "mcpServers": {
+    "oracle-models": {
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"]
+    }
+  }
+}
+```
+
+**Global:** Add to `~/.gemini/antigravity-cli/mcp_config.json`:
+```json
+{
+  "mcpServers": {
+    "oracle-models": {
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"]
+    }
+  }
+}
+```
+
+> **Note:** Both Gemini CLI and Antigravity CLI read the same workspace context files (`GEMINI.md` and `AGENTS.md`). No changes needed for context rules.
+
 ## Usage in Gemini CLI
+> Valid until the full migration to Antigravity CLI on June 18th.
+
 Add to `~/.gemini/settings.json`:
 ```json
 {

@@ -15,6 +15,7 @@ Data sourced from the [Artificial Analysis Intelligence Index](https://artificia
 | Agent | MCP Server | Skill | Install command |
 |-------|:----------:|:-----:|-----------------|
 | [OpenCode](https://opencode.ai) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a opencode -y` |
+| [Antigravity CLI](https://antigravity.google) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a antigravity-cli -y` |
 | [Gemini CLI](https://geminicli.com) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a gemini-cli -y` |
 | [Claude Code](https://claude.com/product/claude-code) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a claude-code -y` |
 | [Codex](https://openai.com/codex) | Yes | Yes | `npx skills add vanppsa/oracle-models -g -a codex -y` |
@@ -68,7 +69,48 @@ The following agents share the same MCP configuration structure. Add this block 
 *   **Goose:** Add to `~/.config/goose/mcp.json` or via `goose session --with-mcp oracle-models -- npx -y oracle-models-mcp`.
 *   **Kiro CLI:** Add to `.kiro/mcp.json`.
 
+### Antigravity CLI
+Antigravity CLI stores MCP servers in a dedicated `mcp_config.json` file. You can configure it globally or per workspace.
+
+**Workspace (recommended):** Add to `.agents/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "oracle-models": {
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"],
+      "timeout": 10000
+    }
+  }
+}
+```
+
+**Global:** Add to `~/.gemini/antigravity-cli/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "oracle-models": {
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"],
+      "timeout": 10000
+    }
+  }
+}
+```
+
+Or via CLI:
+
+```bash
+agy mcp add oracle-models -- npx -y oracle-models-mcp
+```
+
+> **Note:** For remote MCP servers, Antigravity CLI uses `serverUrl` instead of `url`.
+
 ### Gemini CLI
+> **Deprecation notice:** Gemini CLI will be fully migrated to Antigravity CLI on **June 18th**. The configuration below remains valid until then.
+
 Add to `~/.gemini/settings.json`:
 
 ```json

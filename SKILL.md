@@ -355,7 +355,41 @@ Add to `~/.config/opencode/opencode.json`:
 }
 ```
 
+### Antigravity CLI
+
+Antigravity CLI stores MCP server configurations in a dedicated `mcp_config.json` file.
+
+**Workspace:** Add to `.agents/mcp_config.json`:
+```json
+{
+  "mcpServers": {
+    "oracle-models": {
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"],
+      "timeout": 10000
+    }
+  }
+}
+```
+
+**Global:** Add to `~/.gemini/antigravity-cli/mcp_config.json`:
+```json
+{
+  "mcpServers": {
+    "oracle-models": {
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"],
+      "timeout": 10000
+    }
+  }
+}
+```
+
+> **Note:** For remote MCP servers, use `serverUrl` instead of `url`.
+
 ### Gemini CLI
+
+> Valid until June 18th migration deadline.
 
 Add to `~/.gemini/settings.json`:
 ```json
