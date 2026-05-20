@@ -7,7 +7,7 @@ import { formatPlanBlock } from "./format";
 export const server = new Server(
   {
     name: "oracle-models",
-    version: "1.3.0",
+    version: "2.0.0",
   },
   {
     capabilities: {
@@ -15,6 +15,11 @@ export const server = new Server(
     },
   }
 );
+
+const ALL_PROVIDERS = [
+  "anthropic", "google", "zai", "xai", "openai",
+  "deepseek", "moonshot", "alibaba", "meta", "mistral"
+];
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
@@ -43,7 +48,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: "get_model_suggestions",
-        description: "Returns the suggested models for a tier with updated prices. If you are Claude → pass preferred_provider: 'anthropic'. If you are Gemini → pass preferred_provider: 'google'. If you are GLM → pass preferred_provider: 'zai'. If you are Grok → pass preferred_provider: 'xai'. If you are GPT → pass preferred_provider: 'openai'.",
+        description: "Returns suggested models for a tier. Auto-detects your client environment (Claude Code, Gemini CLI, OpenCode, etc.) and filters suggestions accordingly. Native clients (Claude Code, Gemini CLI, Codex) receive only their provider's models. Aggregator clients (OpenCode, Cursor, Cline) receive the best 4 models across all providers including open-source (DeepSeek, Kimi, Qwen, Llama, Mistral). Pass preferred_provider to highlight a specific provider.",
         inputSchema: {
           type: "object",
           properties: {
@@ -54,8 +59,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             preferred_provider: {
               type: "string",
-                    enum: ["anthropic", "google", "zai", "xai", "openai"],
-              description: "Preferred provider to highlight (optional)",
+              enum: ALL_PROVIDERS,
+              description: "Provider to highlight (optional). Auto-detected from your client if omitted.",
             },
           },
           required: ["tier"],
@@ -110,16 +115,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === "format_plan_block") {
     const { tier, reason, estimated_files, estimated_tokens, preferred_provider } = request.params.arguments as any;
     const modelsResult = await getModelSuggestions(tier as Tier, preferred_provider);
-    
+
     const block = formatPlanBlock({
       tier: tier as Tier,
       reason,
       estimated_files,
       estimated_tokens,
       preferred_provider,
+      client_type: modelsResult.client_type,
+      client_label: modelsResult.client_label,
       models: modelsResult.models,
+      suggested_first: modelsResult.suggested_first,
     });
-    
+
     return {
       content: [
         {

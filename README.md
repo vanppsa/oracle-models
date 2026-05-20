@@ -2,9 +2,9 @@
 
 [![npm](https://img.shields.io/npm/v/oracle-models-mcp?label=npm)](https://www.npmjs.com/package/oracle-models-mcp) [![skills](https://img.shields.io/badge/skills.sh-installable-blue)](https://skills.sh) [![MCP](https://img.shields.io/badge/MCP-compatible-green)](https://modelcontextprotocol.io) [![license](https://img.shields.io/badge/license-MIT-brightgreen)](./LICENSE)
 
-Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model per provider — works as both an **MCP server** (live tools) and an **agent skill** (behavioral instructions).
+Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model — with **client auto-detection** that filters suggestions to match your environment.
 
-Providers: **Claude** (Anthropic), **Gemini** (Google), **GLM** (Z.ai), **Grok** (xAI), **GPT** (OpenAI).
+**10 providers:** Claude (Anthropic), Gemini (Google), GPT (OpenAI), Grok (xAI), **DeepSeek**, **Kimi** (Moonshot), **Qwen** (Alibaba), **Llama** (Meta), **Mistral**, GLM (Z.ai).
 
 Data sourced from the [Artificial Analysis Intelligence Index](https://artificialanalysis.ai/leaderboards/models).
 
@@ -23,6 +23,18 @@ Data sourced from the [Artificial Analysis Intelligence Index](https://artificia
 > **Other Compatible Agents:** Cursor, Cline, Windsurf, Roo Code, Goose, Kiro CLI, Amp, Augment, Trae, GitHub Copilot, VS Code Copilot.
 >
 > To install for other agents, use the same command format: `npx skills add vanppsa/oracle-models -g -a <agent-name> -y`.
+
+---
+
+## Client Auto-Detection
+
+Oracle Models automatically detects your MCP client during initialization and tailors model suggestions:
+
+**Native clients** (Claude Code, Gemini CLI, Antigravity CLI, Codex) — returns only your provider's models. No noise.
+
+**Aggregator clients** (OpenCode, Cursor, Cline, etc.) — returns the best 4 models across all providers, with at least 1 open-source model. DeepSeek is prioritized as best value.
+
+**Unknown clients** — treated as aggregators.
 
 ---
 
@@ -197,46 +209,50 @@ Classifies a development task by complexity using a weighted scoring engine with
 
 ### `get_model_suggestions`
 
-Returns recommended models for a tier with scores and pricing.
+Returns recommended models for a tier. **Auto-detects your client environment** and filters accordingly.
 
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|:--------:|-------------|
 | `tier` | `"LIGHT" \| "MEDIUM" \| "HEAVY"` | Yes | Complexity tier |
-| `preferred_provider` | `"anthropic" \| "google" \| "zai" \| "xai" \| "openai"` | No | Provider to highlight |
+| `preferred_provider` | string | No | Provider to highlight. One of: `anthropic`, `google`, `zai`, `xai`, `openai`, `deepseek`, `moonshot`, `alibaba`, `meta`, `mistral` |
 
-**Provider mapping:**
-
-| You are | Pass as `preferred_provider` |
-|---------|------------------------------|
-| Claude | `anthropic` |
-| Gemini | `google` |
-| GLM | `zai` |
-| Grok | `xai` |
-| GPT | `openai` |
-
-**Example:**
-
-```json
-{ "tier": "MEDIUM", "preferred_provider": "anthropic" }
-```
-
-**Response:**
+**Response (aggregator client — e.g., OpenCode):**
 
 ```json
 {
-  "tier": "MEDIUM",
-  "updated_at": "2026-05-02",
-  "data_source": "cache",
-  "suggested_first": "claude",
+  "tier": "HEAVY",
+  "updated_at": "2026-05-20",
+  "data_source": "fallback",
+  "client_detected": "opencode",
+  "client_type": "aggregator",
+  "client_label": "OpenCode",
   "models": {
-    "claude": { "name": "Claude Sonnet 4.6 (max)", "score": 51.7, "price_blended_usd_per_1m": 6.56 },
-    "gemini": { "name": "Gemini 3 Flash Preview", "score": 46.4, "price_blended_usd_per_1m": 1.13 },
-    "glm": { "name": "GLM-5 (Reasoning)", "score": 49.8, "price_blended_usd_per_1m": 1.55 },
-    "grok": { "name": "Grok 4.1 Fast (Reasoning)", "score": 38.6, "price_blended_usd_per_1m": 0.28 },
-    "openai": { "name": "GPT-5.4 mini (xhigh)", "score": 48.9, "price_blended_usd_per_1m": 1.69 }
-  }
+    "openai": { "name": "GPT-5.5 (xhigh)", "score": 60, "price": 4.35, "speed": 659, "price_blended_usd_per_1m": 4.35 },
+    "anthropic": { "name": "Claude Opus 4.7 (max)", "score": 57, "price": 4.10, "speed": 512, "price_blended_usd_per_1m": 4.10 },
+    "moonshot": { "name": "Kimi K2.6", "score": 54, "price": 0.70, "speed": 972, "price_blended_usd_per_1m": 0.70 },
+    "deepseek": { "name": "DeepSeek V4 Pro (Max)", "score": 52, "price": 0.71, "speed": 302, "price_blended_usd_per_1m": 0.71 }
+  },
+  "suggested_first": "openai"
+}
+```
+
+**Response (native client — e.g., Claude Code):**
+
+```json
+{
+  "tier": "HEAVY",
+  "updated_at": "2026-05-20",
+  "data_source": "fallback",
+  "client_detected": "claude-code",
+  "client_type": "native",
+  "native_provider": "anthropic",
+  "client_label": "Claude Code",
+  "models": {
+    "anthropic": { "name": "Claude Opus 4.7 (max)", "score": 57, "price": 4.10, "speed": 512, "price_blended_usd_per_1m": 4.10 }
+  },
+  "suggested_first": "anthropic"
 }
 ```
 
@@ -254,40 +270,22 @@ Generates the formatted classification block to append at the end of a plan.
 | `estimated_tokens` | string | Yes | Estimated tokens to generate |
 | `preferred_provider` | string | No | Provider to highlight |
 
-**Example:**
-
-```json
-{
-  "tier": "MEDIUM",
-  "reason": "Inclusion of complex business rules/validations",
-  "estimated_files": "2–5",
-  "estimated_tokens": "200–800",
-  "preferred_provider": "anthropic"
-}
-```
-
 **Response:**
 
 ```markdown
----
-
-### 📋 TASK CLASSIFICATION
-- **Tier:** `MEDIUM`
-- **Reason:** Inclusion of complex business rules/validations
-- **Estimated Scope:** ~2–5 files | ~200–800 tokens generated
-
-### 🤖 SUGGESTED MODELS FOR EXECUTION
-| Provider | Model |
-|----------|-------|
-| Claude | Claude Sonnet 4.6 (max) ✨ (Suggested for your environment) |
-| Gemini | Gemini 3 Flash Preview |
-| GLM | GLM-5 (Reasoning) |
-| Grok | Grok 4.1 Fast (Reasoning) |
-| GPT | GPT-5.4 mini (xhigh) |
-
----
-
-> **Note:** The classification refers to the complexity of **executing** this plan, not creating it.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 TASK CLASSIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tier     : MEDIUM
+Reason   : Inclusion of complex business rules/validations
+Files    : ~2–5 files | ~200–800 tokens generated
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 SUGGESTED MODELS FOR EXECUTION (OpenCode)
+GPT       : GPT-5.4 mini (xhigh) ✨ (Suggested for your environment)
+DeepSeek  : DeepSeek V4 Flash (Max)
+Gemini    : Gemini 3 Flash
+GLM       : GLM-5
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ---
@@ -300,7 +298,7 @@ Generates the formatted classification block to append at the end of a plan.
 
 1. The AI produces a multi-step action plan.
 2. **Classification**: The AI calls `classify_task` to evaluate the complexity of **EXECUTING** the plan it just wrote.
-3. **Suggestion**: The AI calls `get_model_suggestions` to find the best models for that specific execution tier.
+3. **Suggestion**: The AI calls `get_model_suggestions` to find the best models for that specific execution tier. Client auto-detection filters the results.
 4. **Integration**: The AI appends the formatted classification block at the end of the response.
 
 ### Fallback workflow (skill only, no MCP)
@@ -433,13 +431,13 @@ Copy and paste this block into your agent's instruction file:
 2. Call `oracle-models > get_model_suggestions` with the returned tier
 3. Compose and append the block below at the end of the response:
 
-### 📋 TASK CLASSIFICATION
+### TASK CLASSIFICATION
 - **Tier:** `[LIGHT | MEDIUM | HEAVY]`
 - **Reason:** [Technical phrase referencing the determining criteria of the plan's EXECUTION]
 - **Estimated Scope:** ~[N] files | ~[N] tokens generated
 
-### 🤖 SUGGESTED MODELS FOR EXECUTION
-Claude: [model] · Gemini: [model] · GLM: [model] · Grok: [model] · GPT: [model]
+### SUGGESTED MODELS FOR EXECUTION
+[Provider] : [model] | [Provider] : [model] | ...
 
 > **Note:** The classification refers to the complexity of **executing** this plan, not creating it.
 ```

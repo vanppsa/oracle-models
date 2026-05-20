@@ -1,26 +1,41 @@
 {
-  "updated_at": "2026-05-02",
+  "updated_at": "2026-05-20",
   "tiers": {
     "HEAVY": {
-      "claude": { "name": "Claude Opus 4.7 (max)", "score": 57.3, "price": 10.00 },
-      "gemini": { "name": "Gemini 3.1 Pro Preview", "score": 57.2, "price": 4.50 },
-      "glm": { "name": "GLM-5.1 (Reasoning)", "score": 51.4, "price": 2.15 },
-      "grok": { "name": "Grok 4.3", "score": 53.2, "price": 1.56 },
-      "openai": { "name": "GPT-5.5 (xhigh)", "score": 60.2, "price": 11.25 }
+      "anthropic": { "name": "Claude Opus 4.7 (max)", "score": 57, "price": 4.10, "speed": 512 },
+      "google": { "name": "Gemini 3.1 Pro Preview", "score": 57, "price": 1.74, "speed": 232 },
+      "openai": { "name": "GPT-5.5 (xhigh)", "score": 60, "price": 4.35, "speed": 659 },
+      "xai": { "name": "Grok 4.3 (high)", "score": 53, "price": 0.64, "speed": 927 },
+      "deepseek": { "name": "DeepSeek V4 Pro (Max)", "score": 52, "price": 0.71, "speed": 302 },
+      "moonshot": { "name": "Kimi K2.6", "score": 54, "price": 0.70, "speed": 972 },
+      "alibaba": { "name": "Qwen3.6 Plus", "score": 50, "price": 0.43, "speed": 522 },
+      "meta": { "name": "Muse Spark", "score": 52, "price": 0.34, "speed": 0 },
+      "mistral": { "name": "Mistral Medium 3.5", "score": 39, "price": 2.10, "speed": 167 },
+      "glm": { "name": "GLM-5.1", "score": 51, "price": 0.90, "speed": 541 }
     },
     "MEDIUM": {
-      "claude": { "name": "Claude Sonnet 4.6 (max)", "score": 51.7, "price": 6.56 },
-      "gemini": { "name": "Gemini 3 Flash Preview", "score": 46.4, "price": 1.13 },
-      "glm": { "name": "GLM-5 (Reasoning)", "score": 49.8, "price": 1.55 },
-      "grok": { "name": "Grok 4.1 Fast (Reasoning)", "score": 38.6, "price": 0.28 },
-      "openai": { "name": "GPT-5.4 mini (xhigh)", "score": 48.9, "price": 1.69 }
+      "anthropic": { "name": "Claude Sonnet 4.6 (max)", "score": 52, "price": 2.46, "speed": 621 },
+      "google": { "name": "Gemini 3 Flash", "score": 46, "price": 0.43, "speed": 171 },
+      "openai": { "name": "GPT-5.4 mini (xhigh)", "score": 49, "price": 0.65, "speed": 1688 },
+      "xai": { "name": "Grok 4.1 Fast", "score": 39, "price": 0.28, "speed": 0 },
+      "deepseek": { "name": "DeepSeek V4 Flash (Max)", "score": 47, "price": 0.06, "speed": 1051 },
+      "moonshot": { "name": "Kimi K2.6 (Non-reasoning)", "score": 43, "price": 0.70, "speed": 652 },
+      "alibaba": { "name": "Qwen3.6 35B A3B", "score": 43, "price": 0.37, "speed": 184 },
+      "meta": { "name": "Llama 4 Maverick", "score": 18, "price": 0.34, "speed": 113 },
+      "mistral": { "name": "Mistral Small 4", "score": 28, "price": 0.20, "speed": 156 },
+      "glm": { "name": "GLM-5", "score": 50, "price": 0.66, "speed": 666 }
     },
     "LIGHT": {
-      "claude": { "name": "Claude 4.5 Haiku (Reasoning)", "score": 37.1, "price": 2.19 },
-      "gemini": { "name": "Gemini 3.1 Flash-Lite Preview", "score": 33.5, "price": 0.56 },
-      "glm": { "name": "GLM-4.7-Flash (Reasoning)", "score": 30.1, "price": 0.15 },
-      "grok": { "name": "Grok 4.1 Fast (Non-reasoning)", "score": 23.6, "price": 0.28 },
-      "openai": { "name": "GPT-5.4 nano (xhigh)", "score": 44.0, "price": 0.46 }
+      "anthropic": { "name": "Claude 4.5 Haiku (Reasoning)", "score": 37, "price": 0.82, "speed": 1021 },
+      "google": { "name": "Gemini 3.1 Flash-Lite Preview", "score": 34, "price": 0.22, "speed": 3155 },
+      "openai": { "name": "GPT-5.4 nano (xhigh)", "score": 44, "price": 0.18, "speed": 1564 },
+      "xai": { "name": "Grok 4.1 Fast (Non-reasoning)", "score": 24, "price": 0.10, "speed": 0 },
+      "deepseek": { "name": "DeepSeek V4 Flash", "score": 36, "price": 0.06, "speed": 1001 },
+      "moonshot": { "name": "Kimi K2.5", "score": 37, "price": 0.49, "speed": 443 },
+      "alibaba": { "name": "Qwen3.5 0.8B (Non-reasoning)", "score": 11, "price": 0.01, "speed": 0 },
+      "meta": { "name": "Llama 4 Scout", "score": 14, "price": 0.22, "speed": 1280 },
+      "mistral": { "name": "Devstral 2", "score": 22, "price": 0.005, "speed": 571 },
+      "glm": { "name": "GLM-5 (Non-reasoning)", "score": 41, "price": 0.66, "speed": 512 }
     }
   }
 }

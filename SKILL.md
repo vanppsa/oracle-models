@@ -1,6 +1,6 @@
 ---
 name: oracle-models
-description: Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model per provider (Claude, Gemini, GLM, Grok, GPT). Activates only during plan mode. Models ranked by artificialanalysis.ai Intelligence Index. Updatable by any AI without manual reconfiguration. Works as both a skill (behavioral instructions) and an MCP server (live tools).
+description: Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests cost-efficient AI models per provider. Auto-detects MCP client environment for tailored suggestions. Activates only during plan mode. Models ranked by artificialanalysis.ai Intelligence Index. Updatable by any AI without manual reconfiguration. Works as both a skill (behavioral instructions) and an MCP server (live tools).
 license: MIT
 compatibility: opencode
 metadata:
@@ -12,7 +12,7 @@ metadata:
 # ORACLE MODELS
 
 > Behavioral instruction set for AI development assistants.
-> Version: 2.0.0| Last updated: 2026-05-20
+> Version: 2.0.0 | Last updated: 2026-05-20
 
 ---
 
@@ -73,6 +73,40 @@ The formatted block must always be clean markdown, integrated into the response 
 
 ---
 
+## CLIENT DETECTION
+
+The MCP server auto-detects your client environment during initialization. Based on the detected client, model suggestions are filtered:
+
+### Native Clients (single provider)
+These clients only have access to their own provider's models. Oracle returns only that provider's best model for the tier.
+
+| Client | Provider | Suggested models |
+|--------|----------|------------------|
+| Claude Code | Anthropic (Claude) | Only Claude models |
+| Gemini CLI | Google (Gemini) | Only Gemini models |
+| Antigravity CLI | Google (Gemini) | Only Gemini models |
+| Codex | OpenAI (GPT) | Only GPT models |
+
+### Aggregator Clients (all providers)
+These clients access models through OpenRouter or similar gateways. Oracle returns the best 4 models across all providers with diversity (at least 1 open-source, DeepSeek prioritized).
+
+| Client | Access |
+|--------|--------|
+| OpenCode | All 10 providers |
+| Cursor | All 10 providers |
+| Cline | All 10 providers |
+| Windsurf | All 10 providers |
+| Roo Code | All 10 providers |
+| GitHub Copilot | All 10 providers |
+| Goose | All 10 providers |
+| Kiro CLI | All 10 providers |
+| Aider | All 10 providers |
+
+### Unknown Clients
+If the client is not recognized, Oracle treats it as an aggregator and returns the best 4 models.
+
+---
+
 ## MCP TOOLS (PREFERRED)
 
 If the Oracle Models MCP server is available (configured as `oracle-models` in MCP settings), use these tools instead of manual classification.
@@ -91,9 +125,9 @@ classify_task(description: string, files_affected?: number, description_length?:
 **Step 2 — Get model suggestions for the returned tier:**
 ```
 get_model_suggestions(tier: "LIGHT" | "MEDIUM" | "HEAVY", preferred_provider?: string)
-→ { tier, updated_at, data_source, models: { claude, gemini, glm, grok, openai }, suggested_first? }
+→ { tier, updated_at, data_source, client_detected, client_type, models, suggested_first? }
 ```
-> Always call this after `classify_task`. Pass `preferred_provider` matching your own provider.
+> Client detection is automatic. Pass `preferred_provider` only to override highlighting.
 
 **Step 3 — Compose the output block manually using the returned data:**
 > Do NOT paste raw tool output. Use the tool return values to fill the OUTPUT BLOCK FORMAT below.
@@ -114,6 +148,33 @@ format_plan_block(tier, reason, estimated_files, estimated_tokens, preferred_pro
 | GLM (Z.ai) | `zai` |
 | Grok (xAI) | `xai` |
 | GPT (OpenAI) | `openai` |
+| DeepSeek | `deepseek` |
+| Kimi (Moonshot) | `moonshot` |
+| Qwen (Alibaba) | `alibaba` |
+| Llama (Meta) | `meta` |
+| Mistral | `mistral` |
+
+---
+
+## PROVIDERS
+
+Oracle Models covers 10 providers across 3 categories:
+
+### Proprietary
+- **Claude** (Anthropic)
+- **Gemini** (Google)
+- **GPT** (OpenAI)
+- **Grok** (xAI)
+
+### Open-source
+- **DeepSeek** — prioritized as best value open-source
+- **Kimi** (Moonshot)
+- **Qwen** (Alibaba)
+- **Llama** (Meta)
+- **Mistral**
+
+### National
+- **GLM** (Z.ai)
 
 ---
 
@@ -251,19 +312,50 @@ A task is only classified as LIGHT if it passes ALL of these checks:
 
 ### MODEL TABLE (May 2026)
 
-| Tier | AA Score | Claude (Anthropic) | Gemini (Google) | GLM (Z.ai) | Grok (xAI) | GPT (OpenAI) |
-|------|----------|--------------------|------------------------|-------------|------------------|---------------------|
-| HEAVY (H) | 51-60 | Claude Opus 4.7 (max) | Gemini 3.1 Pro Preview | GLM-5.1 (Reasoning) | Grok 4.3 | GPT-5.5 (xhigh) |
-| MEDIUM (M) | 38-52 | Claude Sonnet 4.6 (max) | Gemini 3 Flash Preview | GLM-5 (Reasoning) | Grok 4.1 Fast (Reasoning) | GPT-5.4 mini (xhigh) |
-| LIGHT (L) | <=44 | Claude 4.5 Haiku (Reasoning) | Gemini 3.1 Flash-Lite Preview | GLM-4.7-Flash (Reasoning) | Grok 4.1 Fast (Non-reasoning) | GPT-5.4 nano (xhigh) |
+#### HEAVY Tier (highest_score — best Intelligence Index per provider)
 
-### Cost Reference (blended USD/1M tokens)
+| Provider | Model | AA Score | $/1M tokens |
+|----------|-------|----------|-------------|
+| Claude (Anthropic) | Claude Opus 4.7 (max) | 57 | $4.10 |
+| Gemini (Google) | Gemini 3.1 Pro Preview | 57 | $1.74 |
+| GPT (OpenAI) | GPT-5.5 (xhigh) | 60 | $4.35 |
+| Grok (xAI) | Grok 4.3 (high) | 53 | $0.64 |
+| DeepSeek | DeepSeek V4 Pro (Max) | 52 | $0.71 |
+| Kimi (Moonshot) | Kimi K2.6 | 54 | $0.70 |
+| Qwen (Alibaba) | Qwen3.6 Plus | 50 | $0.43 |
+| Llama (Meta) | Muse Spark | 52 | $0.34 |
+| Mistral | Mistral Medium 3.5 | 39 | $2.10 |
+| GLM (Z.ai) | GLM-5.1 | 51 | $0.90 |
 
-| Tier | Claude | Gemini | GLM | Grok | GPT |
-|------|----------------|----------------------|-----------|---------|---------|
-| H | $10.00 (Opus) | $4.50 (3.1 Pro) | $2.15 | $1.56 | $11.25 |
-| M | $6.56 (Sonnet) | $1.13 (3 Flash) | $1.55 | $0.28 | $1.69 |
-| L | $2.19 (Haiku) | $0.56 (Flash-Lite) | $0.15 | $0.28 | $0.46 |
+#### MEDIUM Tier (best_midrange — best score/cost ratio per provider)
+
+| Provider | Model | AA Score | $/1M tokens |
+|----------|-------|----------|-------------|
+| Claude (Anthropic) | Claude Sonnet 4.6 (max) | 52 | $2.46 |
+| Gemini (Google) | Gemini 3 Flash | 46 | $0.43 |
+| GPT (OpenAI) | GPT-5.4 mini (xhigh) | 49 | $0.65 |
+| Grok (xAI) | Grok 4.1 Fast | 39 | $0.28 |
+| DeepSeek | DeepSeek V4 Flash (Max) | 47 | $0.06 |
+| Kimi (Moonshot) | Kimi K2.6 (Non-reasoning) | 43 | $0.70 |
+| Qwen (Alibaba) | Qwen3.6 35B A3B | 43 | $0.37 |
+| Llama (Meta) | Llama 4 Maverick | 18 | $0.34 |
+| Mistral | Mistral Small 4 | 28 | $0.20 |
+| GLM (Z.ai) | GLM-5 | 50 | $0.66 |
+
+#### LIGHT Tier (cheapest_fastest — best price and speed per provider)
+
+| Provider | Model | AA Score | $/1M tokens |
+|----------|-------|----------|-------------|
+| Claude (Anthropic) | Claude 4.5 Haiku (Reasoning) | 37 | $0.82 |
+| Gemini (Google) | Gemini 3.1 Flash-Lite Preview | 34 | $0.22 |
+| GPT (OpenAI) | GPT-5.4 nano (xhigh) | 44 | $0.18 |
+| Grok (xAI) | Grok 4.1 Fast (Non-reasoning) | 24 | $0.10 |
+| DeepSeek | DeepSeek V4 Flash | 36 | $0.06 |
+| Kimi (Moonshot) | Kimi K2.5 | 37 | $0.49 |
+| Qwen (Alibaba) | Qwen3.5 0.8B (Non-reasoning) | 11 | $0.01 |
+| Llama (Meta) | Llama 4 Scout | 14 | $0.22 |
+| Mistral | Devstral 2 | 22 | $0.005 |
+| GLM (Z.ai) | GLM-5 (Non-reasoning) | 41 | $0.66 |
 
 ---
 
@@ -279,13 +371,13 @@ At the end of any action plan activating this skill, append exactly this block (
 
 ---
 
-### 📋 TASK CLASSIFICATION
+### TASK CLASSIFICATION
 - **Tier:** `[LIGHT | MEDIUM | HEAVY]`
 - **Reason:** [Technical phrase referencing the determining criteria of the plan's EXECUTION]
 - **Estimated Scope:** ~[N] files | ~[N] tokens generated
 
-### 🤖 SUGGESTED MODELS FOR EXECUTION
-Claude: [model] · Gemini: [model] · GLM: [model] · Grok: [model] · GPT: [model]
+### SUGGESTED MODELS FOR EXECUTION (ClientName)
+[Provider] : [model] | [Provider] : [model] | ...
 
 ---
 
@@ -304,21 +396,20 @@ If the user requests to swap, add, or remove models from this skill, execute aut
 4. Replace only the corresponding cell in the MODEL TABLE
 5. Update the cost in the price reference table
 
-### Add a new company (e.g., DeepSeek)
-1. Add a new column to the model table with 3 tiers (H/M/L)
-2. Use artificialanalysis.ai to identify the 3 models by score:
-   - HEAVY = Intelligence Index >= 51
-   - MEDIUM = Intelligence Index 38-50
-   - LIGHT = Intelligence Index <= 44
-3. Add costs to the price reference table
-4. Add the corresponding line to the OUTPUT BLOCK FORMAT table
-5. Log the change in the HISTORY table
+### Add a new company
+1. Add a new entry to `PROVIDER_REGISTRY` in `src/models.ts` with key, category, displayLabel, and creatorNames
+2. Add fallback data to `data/fallback.json` for all 3 tiers
+3. Add the creator name to `CREATOR_TO_PROVIDER` mapping
+4. Update the MODEL TABLE in SKILL.md
+5. Update the `preferred_provider` enum in `src/server.ts`
+6. Log the change in the HISTORY table
 
 ### Remove a company
-1. Delete the company column from the model table
-2. Delete the corresponding cost row
-3. Delete the line in the OUTPUT BLOCK FORMAT table
-4. Log the change in the HISTORY table
+1. Remove the entry from `PROVIDER_REGISTRY` in `src/models.ts`
+2. Remove fallback data from `data/fallback.json`
+3. Remove from `preferred_provider` enum in `src/server.ts`
+4. Remove from MODEL TABLE in SKILL.md
+5. Log the change in the HISTORY table
 
 ---
 
@@ -396,6 +487,12 @@ Antigravity CLI stores MCP server configurations in a dedicated `mcp_config.json
 }
 ```
 
+Or via CLI:
+
+```bash
+agy mcp add oracle-models -- npx -y oracle-models-mcp
+```
+
 > **Note:** For remote MCP servers, use `serverUrl` instead of `url`.
 
 ### Gemini CLI
@@ -413,6 +510,12 @@ Add to `~/.gemini/settings.json`:
     }
   }
 }
+```
+
+Or via CLI:
+
+```bash
+gemini mcp add oracle-models -- npx -y oracle-models-mcp
 ```
 
 ### Claude Code
@@ -470,3 +573,4 @@ Or configure in your MCP setup:
 | 2026-05-04 | Version 1.1.0 - Enhanced classification criteria (Translation, Tests, Docs) and mandatory invocation protocol |
 | 2026-05-04 | Version 1.2.0 - Critical rules: classify execution not planning, never inject raw tool output; infra/config criteria added to all tiers; output block strictly in English; explicit note "classification refers to execution"; mandatory MCP workflow with ordered steps; updated examples with infra tasks |
 | 2026-05-20 | Version 2.0.0 - Weighted scoring engine replacing simple match count; critical domains auto-upgrade to HEAVY; penalty keywords disqualify LIGHT; entropy detection by description length; pessimistic top-down decision flow; new `description_length` parameter; `score` field in classification result |
+| 2026-05-20 | Version 2.0.0 - Expanded to 10 providers (added DeepSeek, Kimi, Qwen, Llama, Mistral); client auto-detection via MCP handshake (native vs aggregator); smart filtering: native clients get only their provider, aggregators get best 4 with DeepSeek prioritized as best value OSS; dynamic provider registry; fallback data updated to 2026-05-20 with AA leaderboard scores |
