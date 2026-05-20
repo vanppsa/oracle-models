@@ -33,6 +33,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "number",
               description: "Estimation of affected files (optional)",
             },
+            description_length: {
+              type: "number",
+              description: "Character count of the full task description if providing a summary (optional). Used for entropy detection — long plans are automatically upgraded.",
+            },
           },
           required: ["description"],
         },
@@ -78,8 +82,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   if (request.params.name === "classify_task") {
-    const { description, files_affected } = request.params.arguments as any;
-    const result = classifyTask(description, files_affected);
+    const { description, files_affected, description_length } = request.params.arguments as any;
+    const result = classifyTask(description, files_affected, description_length);
     return {
       content: [
         {

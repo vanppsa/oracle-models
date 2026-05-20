@@ -5,14 +5,14 @@ license: MIT
 compatibility: opencode
 metadata:
   author: vanppsa
-  version: "1.3.0"
+  version: "2.0.0"
   audience: developers
 ---
 
 # ORACLE MODELS
 
 > Behavioral instruction set for AI development assistants.
-> Version: 1.3.0| Last updated: 2026-05-04
+> Version: 2.0.0| Last updated: 2026-05-20
 
 ---
 
@@ -83,8 +83,8 @@ Execute in order at the END of the plan:
 
 **Step 1 — Classify the EXECUTION of the plan:**
 ```
-classify_task(description: string, files_affected?: number)
-→ { tier, reason, estimated_files, estimated_tokens }
+classify_task(description: string, files_affected?: number, description_length?: number)
+→ { tier, reason, estimated_files, estimated_tokens, score }
 ```
 > The `description` must describe the execution, not the planning. See "CLASSIFY THE EXECUTION" section above.
 
@@ -145,13 +145,100 @@ If `AA_API_KEY` is not configured, the server uses local fallback data from `dat
 
 ---
 
-## MANUAL CLASSIFICATION (FALLBACK)
+## Classification Engine
 
-If MCP tools are NOT available, classify manually using the criteria below.
+The classification engine uses a **weighted scoring system** with a pessimistic top-down decision flow. Tasks are never classified as LIGHT by default — they must pass strict sanitary filters.
 
----
+### Decision Flow (top-down, pessimistic)
 
-### REFERENCE SOURCE
+1. **Critical domain match?** → HEAVY (stops here)
+2. **Description length > 3000 chars?** → HEAVY (stops here)
+3. **Accumulated score >= 40?** → HEAVY
+4. **Accumulated score >= 20?** → MEDIUM
+5. **Penalty keywords detected or >= 2 files?** → MEDIUM
+6. **Otherwise** → LIGHT
+
+### Critical Domains (automatic HEAVY)
+
+Any match on these domains forces HEAVY regardless of other criteria:
+
+- **Security:** auth, authentication, authorization, session, oauth, jwt, token management, rbac, permission, role-based
+- **Financial:** payment, billing, stripe, checkout, invoice, card, financial flow
+- **Data:** schema migration, database in production, migrate
+- **Cryptography:** encrypt, decrypt, hash, cryptography
+- **Compliance:** lgpd, gdpr, audit log, compliance
+- **Architecture:** architecture redesign, extract shared logic, dependency graph refactoring
+- **Infrastructure:** memory leak, race condition, non-deterministic, performance profiling
+- **Async processing:** data pipeline, etl, async worker, retry/fallback
+
+### Penalty Keywords (disqualify LIGHT)
+
+These terms add penalty points and prevent LIGHT classification:
+
+- Public interface changes: `export interface`, `export type`, `export enum`, `public api`
+- Breaking changes: `breaking change`, `breaking`
+- Core modules: `core module`, `core service`, `import from shared`, `import from core`
+- Entry files: `index.ts`, `index.js`, `types.ts`, `main.ts`, `main.js`
+- State management: `redux`, `zustand`, `context api`, `store`
+- Database: `database`, `sql`, `schema`, `prisma`, `alembic`
+- Secrets: `secret`, `api key`, `credential`
+
+### Scoring Weights
+
+**HEAVY criteria (+25-30 pts each):**
+- Architectural redesign or shared logic extraction
+- Authentication, authorization, security domains
+- External system integration (webhooks, API contracts)
+- Non-deterministic debugging (race conditions, memory leaks)
+- Database schema migration in production
+- Performance optimization requiring profiling
+- Billing/payment/financial flows
+- Data pipelines, ETL, async workers
+- State management architecture changes
+- Wide-scope refactoring of dependency graphs
+
+**MEDIUM criteria (+10-15 pts each):**
+- New component/function/module with internal state
+- Function signature changes or contract refactoring
+- Complex validation or business rules
+- New endpoint integration
+- Hook/composable creation with dependencies
+- Feature flags, toggles, conditional logic
+- Data migration with transformation
+- Pagination, filtering, sorting
+- Delimited bug fixes
+- Docker/proxy/simple infrastructure config
+- Test suite implementation
+- Environment/config changes
+- Error handling implementation
+- Code restructuring requiring dependency analysis
+- Third-party API integration
+
+**LIGHT criteria (+3-5 pts each):**
+- Literal value changes (string, number, boolean)
+- CSS/styling changes without logic impact
+- Safe renaming without public interface impact
+- Form field addition/removal without validation
+- Route adjustments
+- Translation/i18n
+- Documentation/README/JSDoc
+- Dependency updates
+- Typo corrections
+
+**Entropy bonuses:**
+- Description length > 1500 chars: +15 pts
+- Description length > 3000 chars: automatic HEAVY
+- Files affected >= 5: +30 pts
+- Files affected >= 3: +15 pts
+- Files affected >= 2: +5 pts
+
+### LIGHT Sanitary Filter
+
+A task is only classified as LIGHT if it passes ALL of these checks:
+- No penalty keyword matches
+- Files affected < 2 (or undefined)
+- Total score < 20
+- No critical domain match
 
 **https://artificialanalysis.ai/leaderboards/models**
 
@@ -180,91 +267,9 @@ If MCP tools are NOT available, classify manually using the criteria below.
 
 ---
 
-### LIGHT — Tier L
+### MANUAL CLASSIFICATION (FALLBACK)
 
-**Profile:** Low-entropy deterministic transformation. No new logical branching.
-
-Classify as LIGHT when the task execution meets >=2 of these criteria:
-
-**Code tasks:**
-- Literal value change: string, number, boolean, label, UI message
-- Style change without logic impact: CSS/Tailwind, color, spacing
-- Rename of variable, function, or file without impact on public interface
-- Addition/removal of field in existing form without new validation
-- Existing route adjustment: path, parameter, redirect — no new business logic
-- Internationalization/translation of pre-structured text
-- Copy/adapt code block with minimal change (< 5 lines difference)
-- Typo correction in functional code (wrong variable, wrong value)
-
-**Infra/config tasks:**
-- Install and configure a single well-documented tool (clear official docs, no conflicts)
-- Enable/disable a single OS or service setting
-- Change a config value in a single file (e.g., nginx.conf, .env, systemd unit)
-- Install a package with no post-install customization required
-
-**Expected modified files:** 1-2
-**Expected new tokens generated:** < 200
-
----
-
-### MEDIUM — Tier M
-
-**Profile:** New logic within a well-delimited scope. Requires reasoning about state, side effects, or component interface.
-
-Classify as MEDIUM when the task execution meets >=2 of these criteria:
-
-**Code tasks:**
-- Creation of new component, function, or module with internal state
-- Refactor of existing function with signature change or return type change
-- Addition of validation with multiple conditions or business rules
-- Integration of new endpoint in existing flow (no new auth)
-- Creation of simple hook/composable with 1-2 dependencies
-- Implementation of feature flag, behavior toggle, or new conditional logic
-- Data migration with transformation (field mapping, type conversion)
-- Addition of pagination, filter, or sort in existing list
-- Bug fix with identified cause requiring change in <=3 files
-- Simple infra/pipeline/Docker/proxy configuration
-
-**Infra/config tasks:**
-- Configure multiple services that need to communicate (e.g., emulator + ADB + NVIDIA GPU drivers)
-- Set up a tool that requires kernel modules, udev rules, or user group changes
-- Configure networking, firewall rules, or reverse proxy with multiple upstreams
-- Reproduce a known-broken environment with partial documentation
-- Migrate data or settings between tools/versions
-
-**Expected modified files:** 2-5
-**Expected new tokens generated:** 200-800
-
----
-
-### HEAVY — Tier H
-
-**Profile:** High decision entropy. Multiple consumers affected, distributed logic, or systemic risk if implemented incorrectly.
-
-Classify as HEAVY when the task execution meets >=1 of these criteria:
-
-**Code tasks:**
-- Shared logic extraction affecting >=3 consumers (hooks, contexts, providers)
-- Module or layer architecture redesign (e.g., migrating REST to tRPC, ORM switch)
-- Implementation of authentication, authorization, or session management
-- External system integration with OAuth, webhooks, or non-trivial API contracts
-- Debugging non-deterministic bugs (race conditions, memory leaks, intermittent behavior)
-- Database schema migration with production data
-- Performance optimization requiring profiling and multiple hypotheses
-- Creation of billing/payment system or any financial flow
-- Implementation of data pipeline, ETL, or async worker with retry/fallback
-- Any task crossing security, cryptography, or compliance domains
-- Refactoring requiring understanding of the entire project dependency graph
-
-**Infra/config tasks:**
-- Architect an environment with conflicting requirements (e.g., GPU passthrough + containerization + networking)
-- Multi-host or distributed system setup (clusters, VPNs, multi-node services)
-- Security hardening with compliance constraints
-- Recover a broken system with no clear root cause (non-deterministic failure)
-- Integrate hardware-level drivers with OS + container stack (GPU, TPU, specialized devices)
-
-**Expected modified files:** 5+
-**Expected new tokens generated:** 800+
+If MCP tools are NOT available, classify manually using the scoring system above. Apply the same top-down pessimistic flow: check critical domains first, then entropy, then accumulated score from the weighted criteria lists.
 
 ---
 
@@ -319,19 +324,25 @@ If the user requests to swap, add, or remove models from this skill, execute aut
 
 ## CLASSIFICATION EXAMPLES
 
-| Task (execution) | Tier | Main Criterion |
-|------|------|----------------|
-| Change button text | LIGHT | Literal value change |
-| Correct component color in CSS | LIGHT | Style change without logic |
-| Install a single CLI tool with official docs | LIGHT | Single well-documented tool |
-| Create card component with props and conditional render | MEDIUM | New component with state/props |
-| Add date filter to existing list | MEDIUM | Filter with new delimited logic |
-| Configure emulator + GPU drivers + ADB on Linux | MEDIUM | Multiple services with integration |
-| Add email validation to registration | MEDIUM | Validation with new business rule |
-| Integrate payment webhook with retry/logging | HEAVY | Financial system + async worker |
-| Refactor auth logic to shared hook | HEAVY | Affects >=3 consumers + security domain |
-| Database table migration without downtime | HEAVY | Schema migration in production |
-| GPU passthrough on VM with container stack | HEAVY | Hardware-level driver + OS + container conflict |
+| Task (execution) | Tier | Score | Main Criterion |
+|------|------|-------|----------------|
+| Change button text | LIGHT | 5 | Literal value change |
+| Correct component color in CSS | LIGHT | 5 | Style change without logic |
+| Fix typo in error message | LIGHT | 3 | Typo correction |
+| Update package version | LIGHT | 3 | Routine dependency maintenance |
+| Rename local variable | LIGHT | 5 | Safe renaming without public impact |
+| Create card component with props and conditional render | MEDIUM | 25 | New component with state/props |
+| Add date filter to existing list | MEDIUM | 10 | Filter with new delimited logic |
+| Add email validation to registration | MEDIUM | 15 | Validation with new business rule |
+| Refactor function signature with new return type | MEDIUM | 27 | Signature change + penalty (export type) |
+| Change export interface used across app | MEDIUM | 20 | Penalty keyword triggers upgrade from LIGHT |
+| Configure emulator + GPU drivers + ADB on Linux | MEDIUM | 20 | Multiple services with integration |
+| Change state management store provider | HEAVY | 100 | Critical domain: state management architecture |
+| Integrate payment webhook with retry/logging | HEAVY | 100 | Critical domain: financial + async worker |
+| Refactor auth logic to shared hook | HEAVY | 100 | Critical domain: auth + shared logic |
+| Database table migration without downtime | HEAVY | 100 | Critical domain: schema migration |
+| GPU passthrough on VM with container stack | HEAVY | 100 | Critical domain: architecture redesign |
+| Migrate REST API to tRPC across 8 endpoints | HEAVY | 55 | Architecture migration + 5+ files |
 
 ---
 
@@ -458,3 +469,4 @@ Or configure in your MCP setup:
 | 2026-05-02 | Version 1.0.1 - Added OpenAI/GPT provider and AA API v2 integration |
 | 2026-05-04 | Version 1.1.0 - Enhanced classification criteria (Translation, Tests, Docs) and mandatory invocation protocol |
 | 2026-05-04 | Version 1.2.0 - Critical rules: classify execution not planning, never inject raw tool output; infra/config criteria added to all tiers; output block strictly in English; explicit note "classification refers to execution"; mandatory MCP workflow with ordered steps; updated examples with infra tasks |
+| 2026-05-20 | Version 2.0.0 - Weighted scoring engine replacing simple match count; critical domains auto-upgrade to HEAVY; penalty keywords disqualify LIGHT; entropy detection by description length; pessimistic top-down decision flow; new `description_length` parameter; `score` field in classification result |

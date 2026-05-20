@@ -167,7 +167,7 @@ Add to `.vscode/mcp.json` or via VS Code settings → MCP:
 
 ### `classify_task`
 
-Classifies a development task by complexity using regex-based heuristics.
+Classifies a development task by complexity using a weighted scoring engine with critical domain detection, penalty keywords, and entropy analysis.
 
 **Parameters:**
 
@@ -175,6 +175,7 @@ Classifies a development task by complexity using regex-based heuristics.
 |-----------|------|:--------:|-------------|
 | `description` | string | Yes | Natural language description of the task |
 | `files_affected` | number | No | Estimated number of affected files |
+| `description_length` | number | No | Character count of the full task description if providing a summary. Used for entropy detection — long plans are automatically upgraded |
 
 **Example:**
 
@@ -189,7 +190,8 @@ Classifies a development task by complexity using regex-based heuristics.
   "tier": "MEDIUM",
   "reason": "Inclusion of complex business rules/validations",
   "estimated_files": "2–5",
-  "estimated_tokens": "200–800"
+  "estimated_tokens": "200–800",
+  "score": 15
 }
 ```
 
@@ -307,15 +309,40 @@ If the MCP server is not configured, the skill contains the full classification 
 
 ---
 
-## Classification Criteria (Execution Focus)
+## Classification Engine
 
-The classification ALWAYS refers to the complexity of **executing** the plan.
+The classification ALWAYS refers to the complexity of **executing** the plan. The engine uses a weighted scoring system with a pessimistic top-down decision flow.
 
-| Tier | Profile | Triggers (Execution) | Expected scope |
-|------|---------|----------|----------------|
-| **LIGHT** | Low-entropy transformation | ≥2 of: literal change, style-only, rename, form field, route adjust, i18n, copy/adapt, typo, single-tool install | 1–2 files, <200 tokens |
-| **MEDIUM** | New logic in delimited scope | ≥2 of: new component/state, signature change, complex validation, new endpoint, hook/composable, feature flag, data migration, multi-service config | 2–5 files, 200–800 tokens |
-| **HEAVY** | High decision entropy, systemic risk | ≥1 of: shared logic extraction, architecture redesign, auth/security, external integration, non-deterministic bugs, DB migration, infra orchestration | 5+ files, 800+ tokens |
+### Decision Flow (top-down, pessimistic)
+
+1. **Critical domain match?** → HEAVY (stops here)
+2. **Description length > 3000 chars?** → HEAVY (stops here)
+3. **Accumulated score >= 40?** → HEAVY
+4. **Accumulated score >= 20?** → MEDIUM
+5. **Penalty keywords detected or >= 2 files?** → MEDIUM
+6. **Otherwise** → LIGHT
+
+### Critical Domains (automatic HEAVY)
+
+Any match forces HEAVY regardless of other criteria: auth/security, payment/billing/financial, schema migration/database, cryptography, compliance (LGPD/GDPR), architecture redesign, non-deterministic debugging, data pipeline/ETL.
+
+### Penalty Keywords (disqualify LIGHT)
+
+These terms prevent LIGHT classification: `export interface/type/enum`, `public api`, `breaking change`, `import from shared/core`, entry files (`index.ts`, `types.ts`, `main.ts`), state management (Redux, Zustand, Context API), database terms, secrets/credentials.
+
+### Scoring Overview
+
+**HEAVY criteria (+25-30 pts each):** Architectural changes, auth/security, external integration, non-deterministic bugs, DB migration, performance profiling, billing/payment, data pipelines, state management architecture, wide-scope refactoring.
+
+**MEDIUM criteria (+10-15 pts each):** New component with state, signature change, complex validation, new endpoint, hook/composable, feature flag, data migration, pagination/filter/sort, bug fix, Docker/infra, test suite, config changes, error handling, code restructuring, third-party API integration.
+
+**LIGHT criteria (+3-5 pts each):** Literal value change, CSS/style, safe rename, form field, route adjust, translation/i18n, documentation, dependency update, typo.
+
+**Entropy bonuses:** Description > 1500 chars (+15), > 3000 chars (auto HEAVY). Files >= 5 (+30), >= 3 (+15), >= 2 (+5).
+
+### LIGHT Sanitary Filter
+
+A task is only LIGHT if it passes ALL: no penalty keywords, < 2 files, total score < 20, no critical domain match.
 
 ---
 
