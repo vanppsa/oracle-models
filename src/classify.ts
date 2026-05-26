@@ -89,6 +89,7 @@ const MEDIUM_THRESHOLD = 20;
 export function classifyTask(description: string, files_affected?: number, description_length?: number): ClassificationResult {
   const desc = description.toLowerCase();
   let score = 0;
+  let criteriaScore = 0; // Score from criteria matches only (excludes files_affected bonus)
   let primaryReason = "";
 
   for (const c of CRITICAL_DOMAINS) {
@@ -116,6 +117,7 @@ export function classifyTask(description: string, files_affected?: number, descr
 
   if (effectiveLength > 1500) {
     score += 15;
+    criteriaScore += 15;
     if (!primaryReason) {
       primaryReason = "Extended task scope with multiple instructions";
     }
@@ -124,6 +126,7 @@ export function classifyTask(description: string, files_affected?: number, descr
   for (const c of HEAVY_CRITERIA) {
     if (c.pattern.test(desc)) {
       score += c.weight;
+      criteriaScore += c.weight;
       if (!primaryReason) {
         primaryReason = c.reason;
       }
@@ -133,6 +136,7 @@ export function classifyTask(description: string, files_affected?: number, descr
   for (const c of MEDIUM_CRITERIA) {
     if (c.pattern.test(desc)) {
       score += c.weight;
+      criteriaScore += c.weight;
       if (!primaryReason) {
         primaryReason = c.reason;
       }
@@ -143,6 +147,7 @@ export function classifyTask(description: string, files_affected?: number, descr
   for (const c of LIGHT_CRITERIA) {
     if (c.pattern.test(desc)) {
       score += c.weight;
+      criteriaScore += c.weight;
       lightMatches.push(c.reason);
     }
   }
@@ -150,6 +155,7 @@ export function classifyTask(description: string, files_affected?: number, descr
   for (const p of PENALTY_KEYWORDS) {
     if (p.pattern.test(desc)) {
       score += p.penalty;
+      criteriaScore += p.penalty;
     }
   }
 
@@ -194,7 +200,7 @@ export function classifyTask(description: string, files_affected?: number, descr
     }
   }
 
-  if (hasPenalty || (files_affected !== undefined && files_affected >= 2)) {
+  if (hasPenalty || (files_affected !== undefined && files_affected >= 2 && criteriaScore >= 5)) {
     return {
       tier: "MEDIUM",
       reason: primaryReason || "Task contains risk indicators requiring intermediate model capability",
