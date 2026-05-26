@@ -55,6 +55,20 @@ Apply this rule regardless of whether the plan is for code, infra, configuration
 
 ---
 
+## CRITICAL: NORMALIZE TO ENGLISH BEFORE CLASSIFYING
+
+**Before calling `classify_task`, normalize non-English task descriptions to English.**
+
+The pattern matching engine uses English as the **primary language**. PT-BR and ES patterns are included as fallback, but relying on them reduces accuracy.
+
+**WRONG:** Passing `"Adicionar validação de email no formulário"` directly → may miss English-first patterns.
+
+**CORRECT:** Translate core intent first: `"Adicionar validação de email"` → `"Add email validation to form"` → then classify.
+
+This ensures consistent matching against the weighted criteria (validation, business rules, form fields, etc.).
+
+---
+
 ## CRITICAL: NEVER INJECT RAW TOOL OUTPUT
 
 When using MCP tools (`format_plan_block`, `get_model_suggestions`, etc.), **never paste the raw tool call output directly into the response**.
@@ -114,6 +128,9 @@ If the Oracle Models MCP server is available (configured as `oracle-models` in M
 ### Mandatory workflow with MCP tools
 
 Execute in order at the END of the plan:
+
+**Step 0 — Normalize description to English (if needed):**
+> Before calling `classify_task`, normalize the task description to English if it's in another language (e.g., "traduzir" → "translate", "validação de email" → "email validation"). This ensures patterns match correctly. PT/ES patterns are included as fallback, but English is the primary matching language.
 
 **Step 1 — Classify the EXECUTION of the plan:**
 ```
@@ -301,7 +318,20 @@ A task is only classified as LIGHT if it passes ALL of these checks:
 - Total score < 20
 - No critical domain match
 
-**https://artificialanalysis.ai/leaderboards/models**
+---
+
+## Multilingual Pattern Support
+
+The classification engine includes patterns in **English (primary)**, **Portuguese (PT-BR)**, and **Spanish (ES)** for the following criteria:
+
+- **Validation:** `validate`, `validação`, `validación`, `validar` + targets (email, phone, password, field, form, etc.)
+- **Component/Function creation:** `new component`, `novo componente`, `nuevo componente`
+- **Refactoring:** `refactor`, `refatorar`, `refactorar`
+- **Tests:** `unit test`, `teste de unidade`, `test de integracion`
+- **Error handling:** `error handling`, `tratamento de erro`, `manejo de errores`
+- **And 10+ more criteria across MEDIUM and LIGHT tiers**
+
+**Important:** While PT-BR and ES patterns are included as fallback, **always normalize task descriptions to English before classification** for maximum accuracy. Non-English patterns are safety nets, not the primary matching strategy.
 
 - Independent methodology (not self-reported by providers)
 - Covers: Intelligence Index, blended price, speed (tokens/s), latency

@@ -427,9 +427,10 @@ Copy and paste this block into your agent's instruction file:
 **NOT required** when: response is explanation only, conversation, or direct code edit without a prior plan.
 
 **Mandatory workflow at the end of every plan:**
-1. Call `oracle-models > classify_task` with a description of the EXECUTION (not the planning)
-2. Call `oracle-models > get_model_suggestions` with the returned tier
-3. Compose and append the block below at the end of the response:
+1. **Normalize description to English** (if task is in another language, translate core intent: "traduzir" → "translate", "validação de email" → "email validation")
+2. Call `oracle-models > classify_task` with a description of the EXECUTION (not the planning)
+3. Call `oracle-models > get_model_suggestions` with the returned tier
+4. Compose and append the block below at the end of the response:
 
 ### TASK CLASSIFICATION
 - **Tier:** `[LIGHT | MEDIUM | HEAVY]`

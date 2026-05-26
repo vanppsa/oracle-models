@@ -42,8 +42,8 @@ const HEAVY_CRITERIA: { pattern: RegExp; reason: string; weight: number }[] = [
 const MEDIUM_CRITERIA: { pattern: RegExp; reason: string; weight: number }[] = [
   { pattern: /\bcomponent.*state\b|\bnew function\b|\bnew module\b/i, reason: "Creation of component/function with internal state", weight: 15 },
   { pattern: /\bsignature change\b|\bfunction refactoring\b/i, reason: "Refactoring of existing function altering contracts", weight: 15 },
-  { pattern: /\bvalidation with multiple\b|\bbusiness rule\b/i, reason: "Inclusion of complex business rules/validations", weight: 15 },
-  { pattern: /\bendpoint integration\b|\bnew endpoint\b/i, reason: "Integration of new endpoint in existing flow", weight: 15 },
+  { pattern: /\bvalidation\b|\bvalidate\b|\bbusiness rule\b/i, reason: "Inclusion of complex business rules/validations", weight: 15 },
+  { pattern: /\bendpoint integration\b|\bnew endpoint\b|\bapi.*integration\b/i, reason: "Integration of new endpoint in existing flow", weight: 15 },
   { pattern: /\bhook creation\b|\bcomposable\b/i, reason: "Creation of hook/composable with dependencies", weight: 15 },
   { pattern: /\bfeature flag\b|\btoggle\b|\bnew conditional logic\b/i, reason: "Implementation of new conditional logic", weight: 10 },
   { pattern: /\bdata migration.*transformation\b/i, reason: "Local data migration and transformation", weight: 15 },
@@ -180,8 +180,8 @@ export function classifyTask(description: string, files_affected?: number, descr
     return {
       tier: "MEDIUM",
       reason: primaryReason || "New logic within a well-delimited scope (2-4 files)",
-      estimated_files: "2\u20135",
-      estimated_tokens: "200\u2013800",
+      estimated_files: "2–5",
+      estimated_tokens: "200–800",
       score,
     };
   }
@@ -198,8 +198,8 @@ export function classifyTask(description: string, files_affected?: number, descr
     return {
       tier: "MEDIUM",
       reason: primaryReason || "Task contains risk indicators requiring intermediate model capability",
-      estimated_files: "2\u20135",
-      estimated_tokens: "200\u2013800",
+      estimated_files: "2–5",
+      estimated_tokens: "200–800",
       score,
     };
   }
@@ -214,7 +214,7 @@ export function classifyTask(description: string, files_affected?: number, descr
   return {
     tier: "LIGHT",
     reason: lightReason,
-    estimated_files: "1\u20132",
+    estimated_files: "1–2",
     estimated_tokens: "< 200",
     score,
   };
