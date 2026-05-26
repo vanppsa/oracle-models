@@ -317,8 +317,10 @@ The classification ALWAYS refers to the complexity of **executing** the plan. Th
 2. **Description length > 3000 chars?** → HEAVY (stops here)
 3. **Accumulated score >= 40?** → HEAVY
 4. **Accumulated score >= 20?** → MEDIUM
-5. **Penalty keywords detected or >= 2 files?** → MEDIUM
+5. **Penalty keywords OR (files >= 2 AND criteriaScore >= 5)?** → MEDIUM
 6. **Otherwise** → LIGHT
+
+> **Important:** The `files >= 2` safety net requires `criteriaScore >= 5` — at least one criterion must match. Tasks with zero criteria matches remain LIGHT even if affecting multiple files.
 
 ### Critical Domains (automatic HEAVY)
 
@@ -338,9 +340,13 @@ These terms prevent LIGHT classification: `export interface/type/enum`, `public 
 
 **Entropy bonuses:** Description > 1500 chars (+15), > 3000 chars (auto HEAVY). Files >= 5 (+30), >= 3 (+15), >= 2 (+5).
 
+### English-Only Patterns
+
+**All classification patterns are in English.** Before calling `classify_task`, normalize non-English task descriptions to English (e.g., "validação de email" → "email validation"). This ensures patterns match correctly.
+
 ### LIGHT Sanitary Filter
 
-A task is only LIGHT if it passes ALL: no penalty keywords, < 2 files, total score < 20, no critical domain match.
+A task is only LIGHT if it passes ALL: no penalty keywords, < 2 files, criteriaScore < 5, total score < 20, no critical domain match.
 
 ---
 
