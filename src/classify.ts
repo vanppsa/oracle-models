@@ -87,13 +87,12 @@ const HEAVY_THRESHOLD = 40;
 const MEDIUM_THRESHOLD = 20;
 
 export function classifyTask(description: string, files_affected?: number, description_length?: number): ClassificationResult {
-  const desc = description.toLowerCase();
   let score = 0;
   let criteriaScore = 0; // Score from criteria matches only (excludes files_affected bonus)
   let primaryReason = "";
 
   for (const c of CRITICAL_DOMAINS) {
-    if (c.pattern.test(desc)) {
+    if (c.pattern.test(description)) {
       return {
         tier: "HEAVY",
         reason: c.reason,
@@ -124,7 +123,7 @@ export function classifyTask(description: string, files_affected?: number, descr
   }
 
   for (const c of HEAVY_CRITERIA) {
-    if (c.pattern.test(desc)) {
+    if (c.pattern.test(description)) {
       score += c.weight;
       criteriaScore += c.weight;
       if (!primaryReason) {
@@ -134,7 +133,7 @@ export function classifyTask(description: string, files_affected?: number, descr
   }
 
   for (const c of MEDIUM_CRITERIA) {
-    if (c.pattern.test(desc)) {
+    if (c.pattern.test(description)) {
       score += c.weight;
       criteriaScore += c.weight;
       if (!primaryReason) {
@@ -145,7 +144,7 @@ export function classifyTask(description: string, files_affected?: number, descr
 
   let lightMatches: string[] = [];
   for (const c of LIGHT_CRITERIA) {
-    if (c.pattern.test(desc)) {
+    if (c.pattern.test(description)) {
       score += c.weight;
       criteriaScore += c.weight;
       lightMatches.push(c.reason);
@@ -154,7 +153,7 @@ export function classifyTask(description: string, files_affected?: number, descr
 
   let hasPenalty = false;
   for (const p of PENALTY_KEYWORDS) {
-    if (p.pattern.test(desc)) {
+    if (p.pattern.test(description)) {
       score += p.penalty;
       criteriaScore += p.penalty;
       hasPenalty = true;
