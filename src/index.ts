@@ -5,13 +5,15 @@ import { setDetectedClient } from "./models";
 
 async function main() {
   const transport = new StdioServerTransport();
+
+  server.oninitialized = () => {
+    const clientInfo = server.getClientVersion();
+    if (clientInfo?.name) {
+      setDetectedClient(clientInfo.name);
+    }
+  };
+
   await server.connect(transport);
-
-  const clientInfo = (server as any).getClientVersion?.();
-  if (clientInfo?.name) {
-    setDetectedClient(clientInfo.name);
-  }
-
   console.error("Oracle Models MCP Server running on stdio");
 }
 
