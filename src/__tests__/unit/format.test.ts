@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatPlanBlock } from './format';
+import { formatPlanBlock } from '../../format';
 
 const baseArgs = {
   tier: 'LIGHT' as const,

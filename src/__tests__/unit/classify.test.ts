@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { classifyTask, Tier } from './classify';
+import { classifyTask, Tier } from '../../classify';
 
 function h(desc: string, files?: number): ReturnType<typeof classifyTask> {
   return classifyTask(desc, files);

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { classifyClient, getProviderDisplayLabel, selectTopModels, getFallbackData } from './models';
-import type { Tier } from './classify';
+import { classifyClient, getProviderDisplayLabel, selectTopModels, getFallbackData } from '../../models';
+import type { Tier } from '../../classify';
 
 describe('classifyClient', () => {
   describe('native clients', () => {
