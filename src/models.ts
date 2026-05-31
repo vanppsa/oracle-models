@@ -128,7 +128,7 @@ function resolvePreferredProvider(raw?: string): ProviderKey | undefined {
   return undefined;
 }
 
-function getFallbackData(): ModelsData {
+export function getFallbackData(): ModelsData {
   try {
     const fallbackPath = path.join(__dirname, '..', 'data', 'fallback.json');
     const data = fs.readFileSync(fallbackPath, 'utf8');
@@ -314,7 +314,7 @@ async function fetchLiveData(): Promise<ModelsData | null> {
   }
 }
 
-function selectTopModels(
+export function selectTopModels(
   allTierModels: TierModels,
   tier: Tier,
   maxModels: number
