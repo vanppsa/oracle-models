@@ -152,10 +152,12 @@ export function classifyTask(description: string, files_affected?: number, descr
     }
   }
 
+  let hasPenalty = false;
   for (const p of PENALTY_KEYWORDS) {
     if (p.pattern.test(desc)) {
       score += p.penalty;
       criteriaScore += p.penalty;
+      hasPenalty = true;
     }
   }
 
@@ -190,14 +192,6 @@ export function classifyTask(description: string, files_affected?: number, descr
       estimated_tokens: "200–800",
       score,
     };
-  }
-
-  let hasPenalty = false;
-  for (const p of PENALTY_KEYWORDS) {
-    if (p.pattern.test(desc)) {
-      hasPenalty = true;
-      break;
-    }
   }
 
   if (hasPenalty || (files_affected !== undefined && files_affected >= 2 && criteriaScore >= 5)) {
