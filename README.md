@@ -2,9 +2,9 @@
 
 [![npm](https://img.shields.io/npm/v/oracle-models-mcp?label=npm)](https://www.npmjs.com/package/oracle-models-mcp) [![skills](https://img.shields.io/badge/skills.sh-installable-blue)](https://skills.sh) [![MCP](https://img.shields.io/badge/MCP-compatible-green)](https://modelcontextprotocol.io) [![license](https://img.shields.io/badge/license-MIT-brightgreen)](./LICENSE)
 
-Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model per provider — works as both an **MCP server** (live tools) and an **agent skill** (behavioral instructions).
+Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model — with **client auto-detection** that filters suggestions to match your environment.
 
-Providers: **Claude** (Anthropic), **Gemini** (Google), **GLM** (Z.ai), **Grok** (xAI), **GPT** (OpenAI).
+**10 providers:** Claude (Anthropic), Gemini (Google), GPT (OpenAI), Grok (xAI), **DeepSeek**, **Kimi** (Moonshot), **Qwen** (Alibaba), **Llama** (Meta), **Mistral**, GLM (Z.ai).
 
 Data sourced from the [Artificial Analysis Intelligence Index](https://artificialanalysis.ai/leaderboards/models).
 
@@ -23,6 +23,18 @@ Data sourced from the [Artificial Analysis Intelligence Index](https://artificia
 > **Other Compatible Agents:** Cursor, Cline, Windsurf, Roo Code, Goose, Kiro CLI, Amp, Augment, Trae, GitHub Copilot, VS Code Copilot.
 >
 > To install for other agents, use the same command format: `npx skills add vanppsa/oracle-models -g -a <agent-name> -y`.
+
+---
+
+## Client Auto-Detection
+
+Oracle Models automatically detects your MCP client during initialization and tailors model suggestions:
+
+**Native clients** (Claude Code, Gemini CLI, Antigravity CLI, Codex) — returns only your provider's models. No noise.
+
+**Aggregator clients** (OpenCode, Cursor, Cline, etc.) — returns the best 4 models across all providers, with at least 1 open-source model. DeepSeek is prioritized as best value.
+
+**Unknown clients** — treated as aggregators.
 
 ---
 
@@ -167,7 +179,7 @@ Add to `.vscode/mcp.json` or via VS Code settings → MCP:
 
 ### `classify_task`
 
-Classifies a development task by complexity using regex-based heuristics.
+Classifies a development task by complexity using a weighted scoring engine with critical domain detection, penalty keywords, and entropy analysis.
 
 **Parameters:**
 
@@ -175,6 +187,7 @@ Classifies a development task by complexity using regex-based heuristics.
 |-----------|------|:--------:|-------------|
 | `description` | string | Yes | Natural language description of the task |
 | `files_affected` | number | No | Estimated number of affected files |
+| `description_length` | number | No | Character count of the full task description if providing a summary. Used for entropy detection — long plans are automatically upgraded |
 
 **Example:**
 
@@ -189,52 +202,57 @@ Classifies a development task by complexity using regex-based heuristics.
   "tier": "MEDIUM",
   "reason": "Inclusion of complex business rules/validations",
   "estimated_files": "2–5",
-  "estimated_tokens": "200–800"
+  "estimated_tokens": "200–800",
+  "score": 15
 }
 ```
 
 ### `get_model_suggestions`
 
-Returns recommended models for a tier with scores and pricing.
+Returns recommended models for a tier. **Auto-detects your client environment** and filters accordingly.
 
 **Parameters:**
 
 | Parameter | Type | Required | Description |
 |-----------|------|:--------:|-------------|
 | `tier` | `"LIGHT" \| "MEDIUM" \| "HEAVY"` | Yes | Complexity tier |
-| `preferred_provider` | `"anthropic" \| "google" \| "zai" \| "xai" \| "openai"` | No | Provider to highlight |
+| `preferred_provider` | string | No | Provider to highlight. One of: `anthropic`, `google`, `zai`, `xai`, `openai`, `deepseek`, `moonshot`, `alibaba`, `meta`, `mistral` |
 
-**Provider mapping:**
-
-| You are | Pass as `preferred_provider` |
-|---------|------------------------------|
-| Claude | `anthropic` |
-| Gemini | `google` |
-| GLM | `zai` |
-| Grok | `xai` |
-| GPT | `openai` |
-
-**Example:**
-
-```json
-{ "tier": "MEDIUM", "preferred_provider": "anthropic" }
-```
-
-**Response:**
+**Response (aggregator client — e.g., OpenCode):**
 
 ```json
 {
-  "tier": "MEDIUM",
-  "updated_at": "2026-05-02",
-  "data_source": "cache",
-  "suggested_first": "claude",
+  "tier": "HEAVY",
+  "updated_at": "2026-05-20",
+  "data_source": "fallback",
+  "client_detected": "opencode",
+  "client_type": "aggregator",
+  "client_label": "OpenCode",
   "models": {
-    "claude": { "name": "Claude Sonnet 4.6 (max)", "score": 51.7, "price_blended_usd_per_1m": 6.56 },
-    "gemini": { "name": "Gemini 3 Flash Preview", "score": 46.4, "price_blended_usd_per_1m": 1.13 },
-    "glm": { "name": "GLM-5 (Reasoning)", "score": 49.8, "price_blended_usd_per_1m": 1.55 },
-    "grok": { "name": "Grok 4.1 Fast (Reasoning)", "score": 38.6, "price_blended_usd_per_1m": 0.28 },
-    "openai": { "name": "GPT-5.4 mini (xhigh)", "score": 48.9, "price_blended_usd_per_1m": 1.69 }
-  }
+    "openai": { "name": "GPT-5.5 (xhigh)", "score": 60, "price": 4.35, "speed": 659, "price_blended_usd_per_1m": 4.35 },
+    "anthropic": { "name": "Claude Opus 4.7 (max)", "score": 57, "price": 4.10, "speed": 512, "price_blended_usd_per_1m": 4.10 },
+    "moonshot": { "name": "Kimi K2.6", "score": 54, "price": 0.70, "speed": 972, "price_blended_usd_per_1m": 0.70 },
+    "deepseek": { "name": "DeepSeek V4 Pro (Max)", "score": 52, "price": 0.71, "speed": 302, "price_blended_usd_per_1m": 0.71 }
+  },
+  "suggested_first": "openai"
+}
+```
+
+**Response (native client — e.g., Claude Code):**
+
+```json
+{
+  "tier": "HEAVY",
+  "updated_at": "2026-05-20",
+  "data_source": "fallback",
+  "client_detected": "claude-code",
+  "client_type": "native",
+  "native_provider": "anthropic",
+  "client_label": "Claude Code",
+  "models": {
+    "anthropic": { "name": "Claude Opus 4.7 (max)", "score": 57, "price": 4.10, "speed": 512, "price_blended_usd_per_1m": 4.10 }
+  },
+  "suggested_first": "anthropic"
 }
 ```
 
@@ -252,40 +270,22 @@ Generates the formatted classification block to append at the end of a plan.
 | `estimated_tokens` | string | Yes | Estimated tokens to generate |
 | `preferred_provider` | string | No | Provider to highlight |
 
-**Example:**
-
-```json
-{
-  "tier": "MEDIUM",
-  "reason": "Inclusion of complex business rules/validations",
-  "estimated_files": "2–5",
-  "estimated_tokens": "200–800",
-  "preferred_provider": "anthropic"
-}
-```
-
 **Response:**
 
 ```markdown
----
-
-### 📋 TASK CLASSIFICATION
-- **Tier:** `MEDIUM`
-- **Reason:** Inclusion of complex business rules/validations
-- **Estimated Scope:** ~2–5 files | ~200–800 tokens generated
-
-### 🤖 SUGGESTED MODELS FOR EXECUTION
-| Provider | Model |
-|----------|-------|
-| Claude | Claude Sonnet 4.6 (max) ✨ (Suggested for your environment) |
-| Gemini | Gemini 3 Flash Preview |
-| GLM | GLM-5 (Reasoning) |
-| Grok | Grok 4.1 Fast (Reasoning) |
-| GPT | GPT-5.4 mini (xhigh) |
-
----
-
-> **Note:** The classification refers to the complexity of **executing** this plan, not creating it.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 TASK CLASSIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tier     : MEDIUM
+Reason   : Inclusion of complex business rules/validations
+Files    : ~2–5 files | ~200–800 tokens generated
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 SUGGESTED MODELS FOR EXECUTION (OpenCode)
+GPT       : GPT-5.4 mini (xhigh) ✨ (Suggested for your environment)
+DeepSeek  : DeepSeek V4 Flash (Max)
+Gemini    : Gemini 3 Flash
+GLM       : GLM-5
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
 ---
@@ -298,7 +298,7 @@ Generates the formatted classification block to append at the end of a plan.
 
 1. The AI produces a multi-step action plan.
 2. **Classification**: The AI calls `classify_task` to evaluate the complexity of **EXECUTING** the plan it just wrote.
-3. **Suggestion**: The AI calls `get_model_suggestions` to find the best models for that specific execution tier.
+3. **Suggestion**: The AI calls `get_model_suggestions` to find the best models for that specific execution tier. Client auto-detection filters the results.
 4. **Integration**: The AI appends the formatted classification block at the end of the response.
 
 ### Fallback workflow (skill only, no MCP)
@@ -307,15 +307,46 @@ If the MCP server is not configured, the skill contains the full classification 
 
 ---
 
-## Classification Criteria (Execution Focus)
+## Classification Engine
 
-The classification ALWAYS refers to the complexity of **executing** the plan.
+The classification ALWAYS refers to the complexity of **executing** the plan. The engine uses a weighted scoring system with a pessimistic top-down decision flow.
 
-| Tier | Profile | Triggers (Execution) | Expected scope |
-|------|---------|----------|----------------|
-| **LIGHT** | Low-entropy transformation | ≥2 of: literal change, style-only, rename, form field, route adjust, i18n, copy/adapt, typo, single-tool install | 1–2 files, <200 tokens |
-| **MEDIUM** | New logic in delimited scope | ≥2 of: new component/state, signature change, complex validation, new endpoint, hook/composable, feature flag, data migration, multi-service config | 2–5 files, 200–800 tokens |
-| **HEAVY** | High decision entropy, systemic risk | ≥1 of: shared logic extraction, architecture redesign, auth/security, external integration, non-deterministic bugs, DB migration, infra orchestration | 5+ files, 800+ tokens |
+### Decision Flow (top-down, pessimistic)
+
+1. **Critical domain match?** → HEAVY (stops here)
+2. **Description length > 3000 chars?** → HEAVY (stops here)
+3. **Accumulated score >= 40?** → HEAVY
+4. **Accumulated score >= 20?** → MEDIUM
+5. **Penalty keywords OR (files >= 2 AND criteriaScore >= 5)?** → MEDIUM
+6. **Otherwise** → LIGHT
+
+> **Important:** The `files >= 2` safety net requires `criteriaScore >= 5` — at least one criterion must match. Tasks with zero criteria matches remain LIGHT even if affecting multiple files.
+
+### Critical Domains (automatic HEAVY)
+
+Any match forces HEAVY regardless of other criteria: auth/security, payment/billing/financial, schema migration/database, cryptography, compliance (LGPD/GDPR), architecture redesign, non-deterministic debugging, data pipeline/ETL.
+
+### Penalty Keywords (disqualify LIGHT)
+
+These terms prevent LIGHT classification: `export interface/type/enum`, `public api`, `breaking change`, `import from shared/core`, entry files (`index.ts`, `types.ts`, `main.ts`), state management (Redux, Zustand, Context API), database terms, secrets/credentials.
+
+### Scoring Overview
+
+**HEAVY criteria (+25-30 pts each):** Architectural changes, auth/security, external integration, non-deterministic bugs, DB migration, performance profiling, billing/payment, data pipelines, state management architecture, wide-scope refactoring.
+
+**MEDIUM criteria (+10-15 pts each):** New component with state, signature change, complex validation, new endpoint, hook/composable, feature flag, data migration, pagination/filter/sort, bug fix, Docker/infra, test suite, config changes, error handling, code restructuring, third-party API integration.
+
+**LIGHT criteria (+3-5 pts each):** Literal value change, CSS/style, safe rename, form field, route adjust, translation/i18n, documentation, dependency update, typo.
+
+**Entropy bonuses:** Description > 1500 chars (+15), > 3000 chars (auto HEAVY). Files >= 5 (+30), >= 3 (+15), >= 2 (+5).
+
+### English-Only Patterns
+
+**All classification patterns are in English.** Before calling `classify_task`, normalize non-English task descriptions to English (e.g., "validação de email" → "email validation"). This ensures patterns match correctly.
+
+### LIGHT Sanitary Filter
+
+A task is only LIGHT if it passes ALL: no penalty keywords, < 2 files, criteriaScore < 5, total score < 20, no critical domain match.
 
 ---
 
@@ -402,17 +433,18 @@ Copy and paste this block into your agent's instruction file:
 **NOT required** when: response is explanation only, conversation, or direct code edit without a prior plan.
 
 **Mandatory workflow at the end of every plan:**
-1. Call `oracle-models > classify_task` with a description of the EXECUTION (not the planning)
-2. Call `oracle-models > get_model_suggestions` with the returned tier
-3. Compose and append the block below at the end of the response:
+1. **Normalize description to English** (if task is in another language, translate core intent: "traduzir" → "translate", "validação de email" → "email validation")
+2. Call `oracle-models > classify_task` with a description of the EXECUTION (not the planning)
+3. Call `oracle-models > get_model_suggestions` with the returned tier
+4. Compose and append the block below at the end of the response:
 
-### 📋 TASK CLASSIFICATION
+### TASK CLASSIFICATION
 - **Tier:** `[LIGHT | MEDIUM | HEAVY]`
 - **Reason:** [Technical phrase referencing the determining criteria of the plan's EXECUTION]
 - **Estimated Scope:** ~[N] files | ~[N] tokens generated
 
-### 🤖 SUGGESTED MODELS FOR EXECUTION
-Claude: [model] · Gemini: [model] · GLM: [model] · Grok: [model] · GPT: [model]
+### SUGGESTED MODELS FOR EXECUTION
+[Provider] : [model] | [Provider] : [model] | ...
 
 > **Note:** The classification refers to the complexity of **executing** this plan, not creating it.
 ```

@@ -1,4 +1,5 @@
 import { Tier } from './classify';
+import { ClientType, getProviderDisplayLabel } from './models';
 
 export interface FormatPlanBlockArgs {
   tier: Tier;
@@ -6,37 +7,37 @@ export interface FormatPlanBlockArgs {
   estimated_files: string;
   estimated_tokens: string;
   preferred_provider?: string;
-  models: {
-    claude: { name: string; score: number; price_blended_usd_per_1m: number };
-    gemini: { name: string; score: number; price_blended_usd_per_1m: number };
-    glm: { name: string; score: number; price_blended_usd_per_1m: number };
-    grok: { name: string; score: number; price_blended_usd_per_1m: number };
-    openai: { name: string; score: number; price_blended_usd_per_1m: number };
-  };
+  client_type?: ClientType;
+  client_label?: string;
+  models: Record<string, { name: string; score: number; price_blended_usd_per_1m: number }>;
+  suggested_first?: string;
 }
 
 export function formatPlanBlock(args: FormatPlanBlockArgs): string {
-  const highlight = (provider: string, modelName: string) => {
-    const isPreferred = args.preferred_provider === provider.toLowerCase();
-    return isPreferred ? `${modelName} ✨ (Suggested for your environment)` : modelName;
-  };
+  const headerSuffix = args.client_label && args.client_label !== 'Unknown'
+    ? ` (${args.client_label})`
+    : '';
+
+  const modelLines = Object.entries(args.models)
+    .map(([key, model]) => {
+      const label = getProviderDisplayLabel(key).padEnd(10);
+      const isSuggested = args.suggested_first === key;
+      const suffix = isSuggested ? ' \u2728 (Suggested for your environment)' : '';
+      return `${label}: ${model.name}${suffix}`;
+    })
+    .join('\n');
 
   const block = `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📋 TASK CLASSIFICATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+\uD83D\uDCCB TASK CLASSIFICATION
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
 Tier     : ${args.tier}
 Reason   : ${args.reason}
 Files    : ~${args.estimated_files} files | ~${args.estimated_tokens} tokens generated
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🤖 SUGGESTED MODELS FOR EXECUTION
-Claude   : ${highlight("claude", args.models.claude.name)}
-Gemini   : ${highlight("gemini", args.models.gemini.name)}
-GLM      : ${highlight("glm", args.models.glm.name)}
-Grok     : ${highlight("grok", args.models.grok.name)}
-GPT      : ${highlight("openai", args.models.openai.name)}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`.trim();
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501
+\uD83E\uDD16 SUGGESTED MODELS FOR EXECUTION${headerSuffix}
+${modelLines}
+\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501`.trim();
 
-  return "\n" + block + "\n";
+  return '\n' + block + '\n';
 }

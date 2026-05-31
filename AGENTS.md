@@ -1,6 +1,7 @@
-# GEMINI.md — Oracle Models MCP
+# AGENTS.md — Oracle Models MCP
 
 ## Project Overview
+
 This project implements a **Model Context Protocol (MCP)** server that classifies development tasks into three tiers (**LIGHT**, **MEDIUM**, **HEAVY**) based on technical complexity and suggests the most cost-efficient AI models from providers like Anthropic (Claude), Google (Gemini), OpenAI (GPT), xAI (Grok), DeepSeek, and others.
 
 ### Key Technologies
@@ -47,6 +48,7 @@ Manual verification via MCP clients (Claude Code, Gemini CLI, Cursor, OpenCode) 
 ## Development Conventions
 
 ### Task Classification (Heuristics)
+
 Classification is driven by regex patterns in `src/classify.ts`. **All patterns are in English.** Non-English descriptions must be normalized to English before classification.
 
 #### Decision Flow (top-down, pessimistic)
@@ -66,13 +68,19 @@ Classification is driven by regex patterns in `src/classify.ts`. **All patterns 
 - Debugging: `memory leak`, `race condition`, `non-deterministic`
 - Infrastructure: `data pipeline`, `etl`, `async worker`
 
-#### Scoring Overview
+#### Scoring Weights
 - **HEAVY criteria:** +25 to +30 points each
 - **MEDIUM criteria:** +10 to +15 points each
 - **LIGHT criteria:** +3 to +5 points each
 - **Penalty keywords:** +15 to +25 points (prevent LIGHT classification)
 - **Files bonus:** +5 (2 files), +15 (3 files), +30 (5+ files)
+
+#### criteriaScore vs Total Score
+- **criteriaScore**: Sum of matches from HEAVY/MEDIUM/LIGHT criteria and penalty keywords
+- **Total score**: criteriaScore + files_affected bonus
 - **Safety net**: `files >= 2` upgrades to MEDIUM **only if** `criteriaScore >= 5`
+
+This prevents tasks with zero criteria matches (e.g., "adjust system behavior") from being upgraded to MEDIUM solely due to affecting multiple files.
 
 ### English-Only Patterns
 **All classification patterns are in English.** Before calling `classify_task`, normalize non-English task descriptions to English:
@@ -105,9 +113,24 @@ The server auto-detects the MCP client during initialization:
 
 ---
 
-## Usage in Antigravity CLI
-Antigravity CLI uses a dedicated `mcp_config.json` file for MCP server configurations.
+## Usage in MCP Clients
 
+### OpenCode
+Add to `~/.config/opencode/opencode.json`:
+```json
+{
+  "mcp": {
+    "oracle-models": {
+      "type": "local",
+      "command": ["npx", "-y", "oracle-models-mcp"],
+      "enabled": true,
+      "timeout": 10000
+    }
+  }
+}
+```
+
+### Antigravity CLI
 **Workspace:** Add to `.agents/mcp_config.json`:
 ```json
 {
@@ -134,11 +157,7 @@ Antigravity CLI uses a dedicated `mcp_config.json` file for MCP server configura
 }
 ```
 
-> **Note:** Both Gemini CLI and Antigravity CLI read the same workspace context files (`GEMINI.md` and `AGENTS.md`). No changes needed for context rules.
-
-## Usage in Gemini CLI
-> Valid until the full migration to Antigravity CLI on June 18th.
-
+### Gemini CLI
 Add to `~/.gemini/settings.json`:
 ```json
 {
@@ -147,6 +166,24 @@ Add to `~/.gemini/settings.json`:
       "command": "npx",
       "args": ["-y", "oracle-models-mcp"],
       "timeout": 10000
+    }
+  }
+}
+```
+
+### Claude Code
+```bash
+claude mcp add oracle-models -- npx -y oracle-models-mcp
+```
+
+### Cursor / Cline / Windsurf
+Add to editor's MCP configuration:
+```json
+{
+  "mcpServers": {
+    "oracle-models": {
+      "command": "npx",
+      "args": ["-y", "oracle-models-mcp"]
     }
   }
 }

@@ -1,18 +1,18 @@
 ---
 name: oracle-models
-description: Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests the most cost-efficient AI model per provider (Claude, Gemini, GLM, Grok, GPT). Activates only during plan mode. Models ranked by artificialanalysis.ai Intelligence Index. Updatable by any AI without manual reconfiguration. Works as both a skill (behavioral instructions) and an MCP server (live tools).
+description: Classifies development task complexity (LIGHT/MEDIUM/HEAVY) and suggests cost-efficient AI models per provider. Auto-detects MCP client environment for tailored suggestions. Activates only during plan mode. Models ranked by artificialanalysis.ai Intelligence Index. Updatable by any AI without manual reconfiguration. Works as both a skill (behavioral instructions) and an MCP server (live tools).
 license: MIT
 compatibility: opencode
 metadata:
   author: vanppsa
-  version: "1.3.0"
+  version: "2.0.0"
   audience: developers
 ---
 
 # ORACLE MODELS
 
 > Behavioral instruction set for AI development assistants.
-> Version: 1.3.0| Last updated: 2026-05-04
+> Version: 2.0.0 | Last updated: 2026-05-20
 
 ---
 
@@ -55,6 +55,20 @@ Apply this rule regardless of whether the plan is for code, infra, configuration
 
 ---
 
+## CRITICAL: NORMALIZE TO ENGLISH BEFORE CLASSIFYING
+
+**Before calling `classify_task`, normalize non-English task descriptions to English.**
+
+The pattern matching engine uses English as the **primary language**. PT-BR and ES patterns are included as fallback, but relying on them reduces accuracy.
+
+**WRONG:** Passing `"Adicionar validação de email no formulário"` directly → may miss English-first patterns.
+
+**CORRECT:** Translate core intent first: `"Adicionar validação de email"` → `"Add email validation to form"` → then classify.
+
+This ensures consistent matching against the weighted criteria (validation, business rules, form fields, etc.).
+
+---
+
 ## CRITICAL: NEVER INJECT RAW TOOL OUTPUT
 
 When using MCP tools (`format_plan_block`, `get_model_suggestions`, etc.), **never paste the raw tool call output directly into the response**.
@@ -73,6 +87,40 @@ The formatted block must always be clean markdown, integrated into the response 
 
 ---
 
+## CLIENT DETECTION
+
+The MCP server auto-detects your client environment during initialization. Based on the detected client, model suggestions are filtered:
+
+### Native Clients (single provider)
+These clients only have access to their own provider's models. Oracle returns only that provider's best model for the tier.
+
+| Client | Provider | Suggested models |
+|--------|----------|------------------|
+| Claude Code | Anthropic (Claude) | Only Claude models |
+| Gemini CLI | Google (Gemini) | Only Gemini models |
+| Antigravity CLI | Google (Gemini) | Only Gemini models |
+| Codex | OpenAI (GPT) | Only GPT models |
+
+### Aggregator Clients (all providers)
+These clients access models through OpenRouter or similar gateways. Oracle returns the best 4 models across all providers with diversity (at least 1 open-source, DeepSeek prioritized).
+
+| Client | Access |
+|--------|--------|
+| OpenCode | All 10 providers |
+| Cursor | All 10 providers |
+| Cline | All 10 providers |
+| Windsurf | All 10 providers |
+| Roo Code | All 10 providers |
+| GitHub Copilot | All 10 providers |
+| Goose | All 10 providers |
+| Kiro CLI | All 10 providers |
+| Aider | All 10 providers |
+
+### Unknown Clients
+If the client is not recognized, Oracle treats it as an aggregator and returns the best 4 models.
+
+---
+
 ## MCP TOOLS (PREFERRED)
 
 If the Oracle Models MCP server is available (configured as `oracle-models` in MCP settings), use these tools instead of manual classification.
@@ -81,19 +129,22 @@ If the Oracle Models MCP server is available (configured as `oracle-models` in M
 
 Execute in order at the END of the plan:
 
+**Step 0 — Normalize description to English (if needed):**
+> Before calling `classify_task`, normalize the task description to English if it's in another language (e.g., "traduzir" → "translate", "validação de email" → "email validation"). This ensures patterns match correctly. PT/ES patterns are included as fallback, but English is the primary matching language.
+
 **Step 1 — Classify the EXECUTION of the plan:**
 ```
-classify_task(description: string, files_affected?: number)
-→ { tier, reason, estimated_files, estimated_tokens }
+classify_task(description: string, files_affected?: number, description_length?: number)
+→ { tier, reason, estimated_files, estimated_tokens, score }
 ```
 > The `description` must describe the execution, not the planning. See "CLASSIFY THE EXECUTION" section above.
 
 **Step 2 — Get model suggestions for the returned tier:**
 ```
 get_model_suggestions(tier: "LIGHT" | "MEDIUM" | "HEAVY", preferred_provider?: string)
-→ { tier, updated_at, data_source, models: { claude, gemini, glm, grok, openai }, suggested_first? }
+→ { tier, updated_at, data_source, client_detected, client_type, models, suggested_first? }
 ```
-> Always call this after `classify_task`. Pass `preferred_provider` matching your own provider.
+> Client detection is automatic. Pass `preferred_provider` only to override highlighting.
 
 **Step 3 — Compose the output block manually using the returned data:**
 > Do NOT paste raw tool output. Use the tool return values to fill the OUTPUT BLOCK FORMAT below.
@@ -114,6 +165,33 @@ format_plan_block(tier, reason, estimated_files, estimated_tokens, preferred_pro
 | GLM (Z.ai) | `zai` |
 | Grok (xAI) | `xai` |
 | GPT (OpenAI) | `openai` |
+| DeepSeek | `deepseek` |
+| Kimi (Moonshot) | `moonshot` |
+| Qwen (Alibaba) | `alibaba` |
+| Llama (Meta) | `meta` |
+| Mistral | `mistral` |
+
+---
+
+## PROVIDERS
+
+Oracle Models covers 10 providers across 3 categories:
+
+### Proprietary
+- **Claude** (Anthropic)
+- **Gemini** (Google)
+- **GPT** (OpenAI)
+- **Grok** (xAI)
+
+### Open-source
+- **DeepSeek** — prioritized as best value open-source
+- **Kimi** (Moonshot)
+- **Qwen** (Alibaba)
+- **Llama** (Meta)
+- **Mistral**
+
+### National
+- **GLM** (Z.ai)
 
 ---
 
@@ -145,15 +223,115 @@ If `AA_API_KEY` is not configured, the server uses local fallback data from `dat
 
 ---
 
-## MANUAL CLASSIFICATION (FALLBACK)
+## Classification Engine
 
-If MCP tools are NOT available, classify manually using the criteria below.
+The classification engine uses a **weighted scoring system** with a pessimistic top-down decision flow. Tasks are never classified as LIGHT by default — they must pass strict sanitary filters.
+
+### Decision Flow (top-down, pessimistic)
+
+1. **Critical domain match?** → HEAVY (stops here)
+2. **Description length > 3000 chars?** → HEAVY (stops here)
+3. **Accumulated score >= 40?** → HEAVY
+4. **Accumulated score >= 20?** → MEDIUM
+5. **Penalty keywords detected or >= 2 files?** → MEDIUM
+6. **Otherwise** → LIGHT
+
+### Critical Domains (automatic HEAVY)
+
+Any match on these domains forces HEAVY regardless of other criteria:
+
+- **Security:** auth, authentication, authorization, session, oauth, jwt, token management, rbac, permission, role-based
+- **Financial:** payment, billing, stripe, checkout, invoice, card, financial flow
+- **Data:** schema migration, database in production, migrate
+- **Cryptography:** encrypt, decrypt, hash, cryptography
+- **Compliance:** lgpd, gdpr, audit log, compliance
+- **Architecture:** architecture redesign, extract shared logic, dependency graph refactoring
+- **Infrastructure:** memory leak, race condition, non-deterministic, performance profiling
+- **Async processing:** data pipeline, etl, async worker, retry/fallback
+
+### Penalty Keywords (disqualify LIGHT)
+
+These terms add penalty points and prevent LIGHT classification:
+
+- Public interface changes: `export interface`, `export type`, `export enum`, `public api`
+- Breaking changes: `breaking change`, `breaking`
+- Core modules: `core module`, `core service`, `import from shared`, `import from core`
+- Entry files: `index.ts`, `index.js`, `types.ts`, `main.ts`, `main.js`
+- State management: `redux`, `zustand`, `context api`, `store`
+- Database: `database`, `sql`, `schema`, `prisma`, `alembic`
+- Secrets: `secret`, `api key`, `credential`
+
+### Scoring Weights
+
+**HEAVY criteria (+25-30 pts each):**
+- Architectural redesign or shared logic extraction
+- Authentication, authorization, security domains
+- External system integration (webhooks, API contracts)
+- Non-deterministic debugging (race conditions, memory leaks)
+- Database schema migration in production
+- Performance optimization requiring profiling
+- Billing/payment/financial flows
+- Data pipelines, ETL, async workers
+- State management architecture changes
+- Wide-scope refactoring of dependency graphs
+
+**MEDIUM criteria (+10-15 pts each):**
+- New component/function/module with internal state
+- Function signature changes or contract refactoring
+- Complex validation or business rules
+- New endpoint integration
+- Hook/composable creation with dependencies
+- Feature flags, toggles, conditional logic
+- Data migration with transformation
+- Pagination, filtering, sorting
+- Delimited bug fixes
+- Docker/proxy/simple infrastructure config
+- Test suite implementation
+- Environment/config changes
+- Error handling implementation
+- Code restructuring requiring dependency analysis
+- Third-party API integration
+
+**LIGHT criteria (+3-5 pts each):**
+- Literal value changes (string, number, boolean)
+- CSS/styling changes without logic impact
+- Safe renaming without public interface impact
+- Form field addition/removal without validation
+- Route adjustments
+- Translation/i18n
+- Documentation/README/JSDoc
+- Dependency updates
+- Typo corrections
+
+**Entropy bonuses:**
+- Description length > 1500 chars: +15 pts
+- Description length > 3000 chars: automatic HEAVY
+- Files affected >= 5: +30 pts
+- Files affected >= 3: +15 pts
+- Files affected >= 2: +5 pts
+
+### LIGHT Sanitary Filter
+
+A task is only classified as LIGHT if it passes ALL of these checks:
+- No penalty keyword matches
+- Files affected < 2 (or undefined)
+- Total score < 20
+- No critical domain match
 
 ---
 
-### REFERENCE SOURCE
+## Multilingual Pattern Support
 
-**https://artificialanalysis.ai/leaderboards/models**
+The classification engine includes patterns in **English (primary)**, **Portuguese (PT-BR)**, and **Spanish (ES)** for the following criteria:
+
+- **Validation:** `validate`, `validação`, `validación`, `validar` + targets (email, phone, password, field, form, etc.)
+- **Component/Function creation:** `new component`, `novo componente`, `nuevo componente`
+- **Refactoring:** `refactor`, `refatorar`, `refactorar`
+- **Tests:** `unit test`, `teste de unidade`, `test de integracion`
+- **Error handling:** `error handling`, `tratamento de erro`, `manejo de errores`
+- **And 10+ more criteria across MEDIUM and LIGHT tiers**
+
+**Important:** While PT-BR and ES patterns are included as fallback, **always normalize task descriptions to English before classification** for maximum accuracy. Non-English patterns are safety nets, not the primary matching strategy.
 
 - Independent methodology (not self-reported by providers)
 - Covers: Intelligence Index, blended price, speed (tokens/s), latency
@@ -164,107 +342,56 @@ If MCP tools are NOT available, classify manually using the criteria below.
 
 ### MODEL TABLE (May 2026)
 
-| Tier | AA Score | Claude (Anthropic) | Gemini (Google) | GLM (Z.ai) | Grok (xAI) | GPT (OpenAI) |
-|------|----------|--------------------|------------------------|-------------|------------------|---------------------|
-| HEAVY (H) | 51-60 | Claude Opus 4.7 (max) | Gemini 3.1 Pro Preview | GLM-5.1 (Reasoning) | Grok 4.3 | GPT-5.5 (xhigh) |
-| MEDIUM (M) | 38-52 | Claude Sonnet 4.6 (max) | Gemini 3 Flash Preview | GLM-5 (Reasoning) | Grok 4.1 Fast (Reasoning) | GPT-5.4 mini (xhigh) |
-| LIGHT (L) | <=44 | Claude 4.5 Haiku (Reasoning) | Gemini 3.1 Flash-Lite Preview | GLM-4.7-Flash (Reasoning) | Grok 4.1 Fast (Non-reasoning) | GPT-5.4 nano (xhigh) |
+#### HEAVY Tier (highest_score — best Intelligence Index per provider)
 
-### Cost Reference (blended USD/1M tokens)
+| Provider | Model | AA Score | $/1M tokens |
+|----------|-------|----------|-------------|
+| Claude (Anthropic) | Claude Opus 4.7 (max) | 57 | $4.10 |
+| Gemini (Google) | Gemini 3.1 Pro Preview | 57 | $1.74 |
+| GPT (OpenAI) | GPT-5.5 (xhigh) | 60 | $4.35 |
+| Grok (xAI) | Grok 4.3 (high) | 53 | $0.64 |
+| DeepSeek | DeepSeek V4 Pro (Max) | 52 | $0.71 |
+| Kimi (Moonshot) | Kimi K2.6 | 54 | $0.70 |
+| Qwen (Alibaba) | Qwen3.6 Plus | 50 | $0.43 |
+| Llama (Meta) | Muse Spark | 52 | $0.34 |
+| Mistral | Mistral Medium 3.5 | 39 | $2.10 |
+| GLM (Z.ai) | GLM-5.1 | 51 | $0.90 |
 
-| Tier | Claude | Gemini | GLM | Grok | GPT |
-|------|----------------|----------------------|-----------|---------|---------|
-| H | $10.00 (Opus) | $4.50 (3.1 Pro) | $2.15 | $1.56 | $11.25 |
-| M | $6.56 (Sonnet) | $1.13 (3 Flash) | $1.55 | $0.28 | $1.69 |
-| L | $2.19 (Haiku) | $0.56 (Flash-Lite) | $0.15 | $0.28 | $0.46 |
+#### MEDIUM Tier (best_midrange — best score/cost ratio per provider)
 
----
+| Provider | Model | AA Score | $/1M tokens |
+|----------|-------|----------|-------------|
+| Claude (Anthropic) | Claude Sonnet 4.6 (max) | 52 | $2.46 |
+| Gemini (Google) | Gemini 3 Flash | 46 | $0.43 |
+| GPT (OpenAI) | GPT-5.4 mini (xhigh) | 49 | $0.65 |
+| Grok (xAI) | Grok 4.1 Fast | 39 | $0.28 |
+| DeepSeek | DeepSeek V4 Flash (Max) | 47 | $0.06 |
+| Kimi (Moonshot) | Kimi K2.6 (Non-reasoning) | 43 | $0.70 |
+| Qwen (Alibaba) | Qwen3.6 35B A3B | 43 | $0.37 |
+| Llama (Meta) | Llama 4 Maverick | 18 | $0.34 |
+| Mistral | Mistral Small 4 | 28 | $0.20 |
+| GLM (Z.ai) | GLM-5 | 50 | $0.66 |
 
-### LIGHT — Tier L
+#### LIGHT Tier (cheapest_fastest — best price and speed per provider)
 
-**Profile:** Low-entropy deterministic transformation. No new logical branching.
-
-Classify as LIGHT when the task execution meets >=2 of these criteria:
-
-**Code tasks:**
-- Literal value change: string, number, boolean, label, UI message
-- Style change without logic impact: CSS/Tailwind, color, spacing
-- Rename of variable, function, or file without impact on public interface
-- Addition/removal of field in existing form without new validation
-- Existing route adjustment: path, parameter, redirect — no new business logic
-- Internationalization/translation of pre-structured text
-- Copy/adapt code block with minimal change (< 5 lines difference)
-- Typo correction in functional code (wrong variable, wrong value)
-
-**Infra/config tasks:**
-- Install and configure a single well-documented tool (clear official docs, no conflicts)
-- Enable/disable a single OS or service setting
-- Change a config value in a single file (e.g., nginx.conf, .env, systemd unit)
-- Install a package with no post-install customization required
-
-**Expected modified files:** 1-2
-**Expected new tokens generated:** < 200
-
----
-
-### MEDIUM — Tier M
-
-**Profile:** New logic within a well-delimited scope. Requires reasoning about state, side effects, or component interface.
-
-Classify as MEDIUM when the task execution meets >=2 of these criteria:
-
-**Code tasks:**
-- Creation of new component, function, or module with internal state
-- Refactor of existing function with signature change or return type change
-- Addition of validation with multiple conditions or business rules
-- Integration of new endpoint in existing flow (no new auth)
-- Creation of simple hook/composable with 1-2 dependencies
-- Implementation of feature flag, behavior toggle, or new conditional logic
-- Data migration with transformation (field mapping, type conversion)
-- Addition of pagination, filter, or sort in existing list
-- Bug fix with identified cause requiring change in <=3 files
-- Simple infra/pipeline/Docker/proxy configuration
-
-**Infra/config tasks:**
-- Configure multiple services that need to communicate (e.g., emulator + ADB + NVIDIA GPU drivers)
-- Set up a tool that requires kernel modules, udev rules, or user group changes
-- Configure networking, firewall rules, or reverse proxy with multiple upstreams
-- Reproduce a known-broken environment with partial documentation
-- Migrate data or settings between tools/versions
-
-**Expected modified files:** 2-5
-**Expected new tokens generated:** 200-800
+| Provider | Model | AA Score | $/1M tokens |
+|----------|-------|----------|-------------|
+| Claude (Anthropic) | Claude 4.5 Haiku (Reasoning) | 37 | $0.82 |
+| Gemini (Google) | Gemini 3.1 Flash-Lite Preview | 34 | $0.22 |
+| GPT (OpenAI) | GPT-5.4 nano (xhigh) | 44 | $0.18 |
+| Grok (xAI) | Grok 4.1 Fast (Non-reasoning) | 24 | $0.10 |
+| DeepSeek | DeepSeek V4 Flash | 36 | $0.06 |
+| Kimi (Moonshot) | Kimi K2.5 | 37 | $0.49 |
+| Qwen (Alibaba) | Qwen3.5 0.8B (Non-reasoning) | 11 | $0.01 |
+| Llama (Meta) | Llama 4 Scout | 14 | $0.22 |
+| Mistral | Devstral 2 | 22 | $0.005 |
+| GLM (Z.ai) | GLM-5 (Non-reasoning) | 41 | $0.66 |
 
 ---
 
-### HEAVY — Tier H
+### MANUAL CLASSIFICATION (FALLBACK)
 
-**Profile:** High decision entropy. Multiple consumers affected, distributed logic, or systemic risk if implemented incorrectly.
-
-Classify as HEAVY when the task execution meets >=1 of these criteria:
-
-**Code tasks:**
-- Shared logic extraction affecting >=3 consumers (hooks, contexts, providers)
-- Module or layer architecture redesign (e.g., migrating REST to tRPC, ORM switch)
-- Implementation of authentication, authorization, or session management
-- External system integration with OAuth, webhooks, or non-trivial API contracts
-- Debugging non-deterministic bugs (race conditions, memory leaks, intermittent behavior)
-- Database schema migration with production data
-- Performance optimization requiring profiling and multiple hypotheses
-- Creation of billing/payment system or any financial flow
-- Implementation of data pipeline, ETL, or async worker with retry/fallback
-- Any task crossing security, cryptography, or compliance domains
-- Refactoring requiring understanding of the entire project dependency graph
-
-**Infra/config tasks:**
-- Architect an environment with conflicting requirements (e.g., GPU passthrough + containerization + networking)
-- Multi-host or distributed system setup (clusters, VPNs, multi-node services)
-- Security hardening with compliance constraints
-- Recover a broken system with no clear root cause (non-deterministic failure)
-- Integrate hardware-level drivers with OS + container stack (GPU, TPU, specialized devices)
-
-**Expected modified files:** 5+
-**Expected new tokens generated:** 800+
+If MCP tools are NOT available, classify manually using the scoring system above. Apply the same top-down pessimistic flow: check critical domains first, then entropy, then accumulated score from the weighted criteria lists.
 
 ---
 
@@ -274,13 +401,13 @@ At the end of any action plan activating this skill, append exactly this block (
 
 ---
 
-### 📋 TASK CLASSIFICATION
+### TASK CLASSIFICATION
 - **Tier:** `[LIGHT | MEDIUM | HEAVY]`
 - **Reason:** [Technical phrase referencing the determining criteria of the plan's EXECUTION]
 - **Estimated Scope:** ~[N] files | ~[N] tokens generated
 
-### 🤖 SUGGESTED MODELS FOR EXECUTION
-Claude: [model] · Gemini: [model] · GLM: [model] · Grok: [model] · GPT: [model]
+### SUGGESTED MODELS FOR EXECUTION (ClientName)
+[Provider] : [model] | [Provider] : [model] | ...
 
 ---
 
@@ -299,39 +426,44 @@ If the user requests to swap, add, or remove models from this skill, execute aut
 4. Replace only the corresponding cell in the MODEL TABLE
 5. Update the cost in the price reference table
 
-### Add a new company (e.g., DeepSeek)
-1. Add a new column to the model table with 3 tiers (H/M/L)
-2. Use artificialanalysis.ai to identify the 3 models by score:
-   - HEAVY = Intelligence Index >= 51
-   - MEDIUM = Intelligence Index 38-50
-   - LIGHT = Intelligence Index <= 44
-3. Add costs to the price reference table
-4. Add the corresponding line to the OUTPUT BLOCK FORMAT table
-5. Log the change in the HISTORY table
+### Add a new company
+1. Add a new entry to `PROVIDER_REGISTRY` in `src/models.ts` with key, category, displayLabel, and creatorNames
+2. Add fallback data to `data/fallback.json` for all 3 tiers
+3. Add the creator name to `CREATOR_TO_PROVIDER` mapping
+4. Update the MODEL TABLE in SKILL.md
+5. Update the `preferred_provider` enum in `src/server.ts`
+6. Log the change in the HISTORY table
 
 ### Remove a company
-1. Delete the company column from the model table
-2. Delete the corresponding cost row
-3. Delete the line in the OUTPUT BLOCK FORMAT table
-4. Log the change in the HISTORY table
+1. Remove the entry from `PROVIDER_REGISTRY` in `src/models.ts`
+2. Remove fallback data from `data/fallback.json`
+3. Remove from `preferred_provider` enum in `src/server.ts`
+4. Remove from MODEL TABLE in SKILL.md
+5. Log the change in the HISTORY table
 
 ---
 
 ## CLASSIFICATION EXAMPLES
 
-| Task (execution) | Tier | Main Criterion |
-|------|------|----------------|
-| Change button text | LIGHT | Literal value change |
-| Correct component color in CSS | LIGHT | Style change without logic |
-| Install a single CLI tool with official docs | LIGHT | Single well-documented tool |
-| Create card component with props and conditional render | MEDIUM | New component with state/props |
-| Add date filter to existing list | MEDIUM | Filter with new delimited logic |
-| Configure emulator + GPU drivers + ADB on Linux | MEDIUM | Multiple services with integration |
-| Add email validation to registration | MEDIUM | Validation with new business rule |
-| Integrate payment webhook with retry/logging | HEAVY | Financial system + async worker |
-| Refactor auth logic to shared hook | HEAVY | Affects >=3 consumers + security domain |
-| Database table migration without downtime | HEAVY | Schema migration in production |
-| GPU passthrough on VM with container stack | HEAVY | Hardware-level driver + OS + container conflict |
+| Task (execution) | Tier | Score | Main Criterion |
+|------|------|-------|----------------|
+| Change button text | LIGHT | 5 | Literal value change |
+| Correct component color in CSS | LIGHT | 5 | Style change without logic |
+| Fix typo in error message | LIGHT | 3 | Typo correction |
+| Update package version | LIGHT | 3 | Routine dependency maintenance |
+| Rename local variable | LIGHT | 5 | Safe renaming without public impact |
+| Create card component with props and conditional render | MEDIUM | 25 | New component with state/props |
+| Add date filter to existing list | MEDIUM | 10 | Filter with new delimited logic |
+| Add email validation to registration | MEDIUM | 15 | Validation with new business rule |
+| Refactor function signature with new return type | MEDIUM | 27 | Signature change + penalty (export type) |
+| Change export interface used across app | MEDIUM | 20 | Penalty keyword triggers upgrade from LIGHT |
+| Configure emulator + GPU drivers + ADB on Linux | MEDIUM | 20 | Multiple services with integration |
+| Change state management store provider | HEAVY | 100 | Critical domain: state management architecture |
+| Integrate payment webhook with retry/logging | HEAVY | 100 | Critical domain: financial + async worker |
+| Refactor auth logic to shared hook | HEAVY | 100 | Critical domain: auth + shared logic |
+| Database table migration without downtime | HEAVY | 100 | Critical domain: schema migration |
+| GPU passthrough on VM with container stack | HEAVY | 100 | Critical domain: architecture redesign |
+| Migrate REST API to tRPC across 8 endpoints | HEAVY | 55 | Architecture migration + 5+ files |
 
 ---
 
@@ -385,6 +517,12 @@ Antigravity CLI stores MCP server configurations in a dedicated `mcp_config.json
 }
 ```
 
+Or via CLI:
+
+```bash
+agy mcp add oracle-models -- npx -y oracle-models-mcp
+```
+
 > **Note:** For remote MCP servers, use `serverUrl` instead of `url`.
 
 ### Gemini CLI
@@ -402,6 +540,12 @@ Add to `~/.gemini/settings.json`:
     }
   }
 }
+```
+
+Or via CLI:
+
+```bash
+gemini mcp add oracle-models -- npx -y oracle-models-mcp
 ```
 
 ### Claude Code
@@ -458,3 +602,5 @@ Or configure in your MCP setup:
 | 2026-05-02 | Version 1.0.1 - Added OpenAI/GPT provider and AA API v2 integration |
 | 2026-05-04 | Version 1.1.0 - Enhanced classification criteria (Translation, Tests, Docs) and mandatory invocation protocol |
 | 2026-05-04 | Version 1.2.0 - Critical rules: classify execution not planning, never inject raw tool output; infra/config criteria added to all tiers; output block strictly in English; explicit note "classification refers to execution"; mandatory MCP workflow with ordered steps; updated examples with infra tasks |
+| 2026-05-20 | Version 2.0.0 - Weighted scoring engine replacing simple match count; critical domains auto-upgrade to HEAVY; penalty keywords disqualify LIGHT; entropy detection by description length; pessimistic top-down decision flow; new `description_length` parameter; `score` field in classification result |
+| 2026-05-20 | Version 2.0.0 - Expanded to 10 providers (added DeepSeek, Kimi, Qwen, Llama, Mistral); client auto-detection via MCP handshake (native vs aggregator); smart filtering: native clients get only their provider, aggregators get best 4 with DeepSeek prioritized as best value OSS; dynamic provider registry; fallback data updated to 2026-05-20 with AA leaderboard scores |

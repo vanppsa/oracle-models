@@ -1,7 +1,7 @@
 {
   "name": "oracle-models-mcp",
-  "version": "1.3.0",
-  "description": "MCP Server — classifies dev tasks and suggests cost-efficient AI models",
+  "version": "2.0.0",
+  "description": "MCP Server — classifies dev tasks and suggests cost-efficient AI models with client-aware filtering",
   "license": "MIT",
   "author": "vanppsa",
   "repository": {
@@ -19,7 +19,13 @@
     "glm",
     "grok",
     "classification",
-    "cost-optimization"
+    "cost-optimization",
+    "deepseek",
+    "kimi",
+    "qwen",
+    "llama",
+    "mistral",
+    "open-source"
   ],
   "bin": {
     "oracle-models-mcp": "dist/index.js"
@@ -33,14 +39,16 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "version": "node scripts/sync-version.js && git add src/server.ts metadata.json SKILL.md"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.1",
-    "undici": "^6.0.0"
+    "@modelcontextprotocol/sdk": "^1.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.7"
   }
 }
