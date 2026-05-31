@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { request } from 'undici';
 import { Tier } from './classify';
 
 export type ProviderKey = 'anthropic' | 'google' | 'openai' | 'xai' | 'deepseek' | 'moonshot' | 'alibaba' | 'meta' | 'mistral' | 'glm';
@@ -296,16 +295,16 @@ async function fetchLiveData(): Promise<ModelsData | null> {
   if (!apiKey) return null;
 
   try {
-    const response = await request(AA_API_URL, {
+    const response = await fetch(AA_API_URL, {
       headers: {
         'x-api-key': apiKey,
         'User-Agent': 'oracle-models-mcp/2.0',
       },
     });
 
-    if (response.statusCode !== 200) return null;
+    if (response.status !== 200) return null;
 
-    const body = await response.body.json() as AAResponse;
+    const body = await response.json() as AAResponse;
 
     if (!body.data || !Array.isArray(body.data)) return null;
 

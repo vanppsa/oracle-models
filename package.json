@@ -42,8 +42,7 @@
     "version": "node scripts/sync-version.js && git add src/server.ts metadata.json SKILL.md"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.1",
-    "undici": "^6.0.0"
+    "@modelcontextprotocol/sdk": "^1.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
